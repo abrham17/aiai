@@ -1,7 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
-import type { Step, Module } from '@/core/types';
+import type { Module, Step } from '@/core/types';
 import { GoDeeper } from '@/components/lesson/GoDeeper';
 import { AuthorNote } from '@/components/lesson/AuthorNote';
 import { QuizBlock } from '@/components/lesson/QuizBlock';
@@ -9,6 +8,7 @@ import { QuizBlock } from '@/components/lesson/QuizBlock';
 interface StepViewerProps {
   step: Step;
   Visualization: Module['Visualization'];
+  direction: 'next' | 'back';
   stepIndex: number;
   totalSteps: number;
   isCompleted: boolean;
@@ -26,6 +26,7 @@ interface StepViewerProps {
 export function StepViewer({
   step,
   Visualization,
+  direction,
   stepIndex,
   totalSteps,
   isCompleted,
@@ -39,16 +40,7 @@ export function StepViewer({
   isLastStep,
   onFinishModule,
 }: StepViewerProps) {
-  // Track direction for step transition animation
-  const prevIndex = useRef(stepIndex);
-  const direction = useRef<'next' | 'back'>('next');
-
-  if (stepIndex !== prevIndex.current) {
-    direction.current = stepIndex > prevIndex.current ? 'next' : 'back';
-    prevIndex.current = stepIndex;
-  }
-
-  const slideClass = direction.current === 'next' ? 'step-slide-next' : 'step-slide-back';
+  const slideClass = direction === 'next' ? 'step-slide-next' : 'step-slide-back';
 
   function handleContinue() {
     onComplete();
@@ -59,17 +51,8 @@ export function StepViewer({
     }
   }
 
-  // Resolve which visualization component to render.
-  // Steps can declare a `component` key in visualizationProps to select an
-  // alternate renderer. The primary Visualization prop is the module default.
   function renderVisualization() {
     if (!Visualization) return null;
-    const { component, ...vizProps } = step.visualizationProps as { component?: string } & Record<string, unknown>;
-    // If no component override — use module default
-    if (!component || component === (Visualization as any).displayName) {
-      return <Visualization {...vizProps} />;
-    }
-    // Pass component name as a prop; Visualization implementations can switch on it
     return <Visualization {...step.visualizationProps} />;
   }
 
@@ -84,7 +67,6 @@ export function StepViewer({
         minHeight: 0,
       }}
     >
-      {/* ── Visualization Area ── */}
       <div
         style={{
           flex: '0 0 55%',
@@ -99,10 +81,8 @@ export function StepViewer({
           position: 'relative',
         }}
       >
-        {/* Active visualization — zoom/pan is built into the component */}
         {renderVisualization()}
 
-        {/* Interaction hint — placed bottom-left to avoid overlapping viz header buttons */}
         {step.interactionHint && (
           <div
             style={{
@@ -127,7 +107,6 @@ export function StepViewer({
         )}
       </div>
 
-      {/* ── Content Area ── */}
       <div
         style={{
           flex: '1 1 auto',
@@ -136,7 +115,6 @@ export function StepViewer({
           minHeight: 0,
         }}
       >
-        {/* Step counter */}
         <div
           style={{
             display: 'flex',
@@ -161,7 +139,6 @@ export function StepViewer({
           )}
         </div>
 
-        {/* Step title */}
         <h2
           style={{
             fontFamily: 'var(--font-heading)',
@@ -175,7 +152,6 @@ export function StepViewer({
           {step.title}
         </h2>
 
-        {/* Main text */}
         <p
           style={{
             fontSize: '0.9375rem',
@@ -187,17 +163,14 @@ export function StepViewer({
           {step.content.text}
         </p>
 
-        {/* Go Deeper */}
         {step.content.goDeeper && (
           <GoDeeper data={step.content.goDeeper} />
         )}
 
-        {/* Author Note */}
         {step.content.authorNote && (
           <AuthorNote content={step.content.authorNote} />
         )}
 
-        {/* Quiz */}
         {step.quiz && (
           <QuizBlock
             quiz={step.quiz}
@@ -206,7 +179,6 @@ export function StepViewer({
           />
         )}
 
-        {/* Navigation */}
         <div
           style={{
             display: 'flex',

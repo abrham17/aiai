@@ -1,15 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getModule } from '@/core/registry';
 import { useLesson } from '@/hooks/useLesson';
+import { useModuleData } from '@/hooks/useModuleData';
 import { useProgress } from '@/hooks/useProgress';
 import { StepViewer } from '@/components/lesson/StepViewer';
 import { LessonSidebar } from '@/components/lesson/LessonSidebar';
 import { ModuleHubSkeleton } from '@/components/ui/Skeleton';
 import { StreakPopup, CompletionPopup } from '@/components/ui/CelebrationPopup';
-import type { Module } from '@/core/types';
 
 export default function GuidedPage() {
   const params = useParams();
@@ -17,22 +16,12 @@ export default function GuidedPage() {
   const tierId = Number(params.tierId);
   const moduleId = params.moduleId as string;
 
-  const [moduleData, setModuleData] = useState<Module | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { moduleData, isLoading } = useModuleData(moduleId);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
 
   const { completeStep, answerQuiz, getModuleProgress, completeModule, stats, streakJustEarned, dismissStreakPopup } = useProgress();
-
-  // Load module data
-  useEffect(() => {
-    setLoading(true);
-    getModule(moduleId).then((mod) => {
-      setModuleData(mod);
-      setLoading(false);
-    });
-  }, [moduleId]);
 
   const moduleProgress = getModuleProgress(tierId, moduleId);
 
@@ -60,7 +49,7 @@ export default function GuidedPage() {
     onAnswerQuiz: handleAnswerQuiz,
   });
 
-  if (loading) {
+  if (isLoading) {
     return <ModuleHubSkeleton />;
   }
 
@@ -210,6 +199,7 @@ export default function GuidedPage() {
             key={`step-${lesson.currentStepIndex}`}
             step={lesson.currentStep}
             Visualization={moduleData.Visualization}
+            direction={lesson.navigationDirection}
             stepIndex={lesson.currentStepIndex}
             totalSteps={lesson.totalSteps}
             isCompleted={lesson.completedSteps.has(lesson.currentStep.id)}

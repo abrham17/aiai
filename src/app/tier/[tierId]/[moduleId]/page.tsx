@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getModule } from '@/core/registry';
 import { useProgress } from '@/hooks/useProgress';
+import { useModuleData } from '@/hooks/useModuleData';
 import { ModuleHubSkeleton } from '@/components/ui/Skeleton';
-import type { Module } from '@/core/types';
 
 export default function ModuleHubPage() {
   const params = useParams();
@@ -13,21 +11,12 @@ export default function ModuleHubPage() {
   const tierId = Number(params.tierId);
   const moduleId = params.moduleId as string;
 
-  const [moduleData, setModuleData] = useState<Module | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { moduleData, isLoading } = useModuleData(moduleId);
   const { getModuleProgress } = useProgress();
-
-  useEffect(() => {
-    setLoading(true);
-    getModule(moduleId).then((mod) => {
-      setModuleData(mod);
-      setLoading(false);
-    });
-  }, [moduleId]);
 
   const progress = getModuleProgress(tierId, moduleId);
 
-  if (loading) {
+  if (isLoading) {
     return <ModuleHubSkeleton />;
   }
 

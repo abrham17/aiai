@@ -1,3 +1,7 @@
+> Historical reference only.
+> This document captures an earlier planning phase and still describes the retired `src/content/*` architecture in several places.
+> Current source of truth: `README.md`, `docs/module_authoring.md`, `src/core/registry.ts`, and `src/core/curriculum.ts`.
+
 # AI Learning Playground — V1 Implementation Plan
 
 > **Status**: ✅ Approved — Locked on 2026-02-21

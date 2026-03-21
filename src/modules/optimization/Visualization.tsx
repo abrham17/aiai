@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef, useEffect, useMemo, memo } from '
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 // ═══════════════════════════════════════════════════════════════════
 // Types
@@ -494,7 +495,7 @@ function OptimizerBall({
   label: string;
   showLRPulse?: boolean;
   lr?: number;
-  orbitRef?: React.MutableRefObject<any>;
+  orbitRef?: React.MutableRefObject<OrbitControlsImpl | null>;
   onDrag?: (x: number, y: number) => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -531,11 +532,8 @@ function OptimizerBall({
     if (!onDrag) return;
     e.stopPropagation();
 
-    // Disable orbit so camera doesn't rotate while we drag
     if (orbitRef?.current) orbitRef.current.enabled = false;
-    gl.domElement.style.cursor = 'grabbing';
 
-    // Attach window-level listeners — these fire everywhere on screen
     const handleMove = (ev: PointerEvent) => {
       const pos = toWorldXZ(ev.clientX, ev.clientY);
       if (pos) onDrag(pos[0], pos[1]);
@@ -545,7 +543,6 @@ function OptimizerBall({
       window.removeEventListener('pointermove', handleMove);
       window.removeEventListener('pointerup', handleUp);
       if (orbitRef?.current) orbitRef.current.enabled = true;
-      gl.domElement.style.cursor = 'grab';
     };
 
     window.addEventListener('pointermove', handleMove);
@@ -565,8 +562,6 @@ function OptimizerBall({
         ref={meshRef}
         position={[x, z, y]}
         onPointerDown={onDrag ? handlePointerDown : undefined}
-        onPointerEnter={() => { if (onDrag) gl.domElement.style.cursor = 'grab'; }}
-        onPointerLeave={() => { gl.domElement.style.cursor = 'default'; }}
       >
         <sphereGeometry args={[radius, 32, 32]} />
         <meshStandardMaterial
@@ -827,7 +822,7 @@ export function LossLandscape3D(props: LossLandscape3DProps) {
   }, []);
 
   // ─── OrbitControls ref for disabling during ball drag ───
-  const orbitRef = useRef<any>(null);
+  const orbitRef = useRef<OrbitControlsImpl | null>(null);
 
   // Drag handler — teleport ball to dragged position and reset trail+step
   const handleBallDrag = useCallback((newX: number, newY: number) => {

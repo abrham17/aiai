@@ -1,3 +1,7 @@
+> Historical reference only.
+> This reference spec still points at the retired `content/` architecture and should not be used as the live authoring guide.
+> Current source of truth: `README.md`, `docs/module_authoring.md`, `src/core/registry.ts`, and `src/core/curriculum.ts`.
+
 # Content Specification — Tier 0 Reference Modules
 
 > Gold standard for all future content. Every module must follow this structure.

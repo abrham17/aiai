@@ -290,6 +290,7 @@ export function EigenTransform(props: EigenTransformProps) {
   // ── ViewBox ──
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, w: CANVAS_SIZE, h: CANVAS_SIZE });
   const isPanning = useRef(false);
+  const [isPanningActive, setIsPanningActive] = useState(false);
   const panStart = useRef({ x: 0, y: 0, vbx: 0, vby: 0 });
 
   useEffect(() => {
@@ -328,20 +329,24 @@ export function EigenTransform(props: EigenTransformProps) {
 
   // Reset on mode change
   useEffect(() => {
-    setMat(initialMatrix ?? defaultMat());
-    setAnimT(0);
-    setIsAnimating(false);
-    setPowerVec({ x: 0.7, y: 0.7 });
-    setPowerTrail([{ x: 0.7, y: 0.7 }]);
-    setPowerIter(0);
-    setDecompStage(0);
-  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+    const frame = requestAnimationFrame(() => {
+      setMat(initialMatrix ?? defaultMat());
+      setAnimT(0);
+      setIsAnimating(false);
+      setPowerVec({ x: 0.7, y: 0.7 });
+      setPowerTrail([{ x: 0.7, y: 0.7 }]);
+      setPowerIter(0);
+      setDecompStage(0);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [initialMatrix, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pan handlers
   const handleBgPointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     const target = e.target as SVGElement;
     if (target.tagName === 'circle' || target.closest('[data-drag-handle]')) return;
     isPanning.current = true;
+    setIsPanningActive(true);
     panStart.current = { x: e.clientX, y: e.clientY, vbx: viewBox.x, vby: viewBox.y };
     e.currentTarget.setPointerCapture(e.pointerId);
   }, [viewBox.x, viewBox.y]);
@@ -356,7 +361,10 @@ export function EigenTransform(props: EigenTransformProps) {
     setViewBox(prev => ({ ...prev, x: panStart.current.vbx - dx, y: panStart.current.vby - dy }));
   }, [viewBox.w, viewBox.h]);
 
-  const handleBgPointerUp = useCallback(() => { isPanning.current = false; }, []);
+  const handleBgPointerUp = useCallback(() => {
+    isPanning.current = false;
+    setIsPanningActive(false);
+  }, []);
 
   // ── Matrix update helper ──
   const updateMat = useCallback((next: Mat2) => {
@@ -904,7 +912,7 @@ export function EigenTransform(props: EigenTransformProps) {
           background: 'var(--viz-bg-gradient)',
           borderRadius: 'var(--radius-md)',
           touchAction: 'none',
-          cursor: isPanning.current ? 'grabbing' : 'default',
+          cursor: isPanningActive ? 'grabbing' : 'default',
           userSelect: 'none',
         }}
         onPointerDown={handleBgPointerDown}

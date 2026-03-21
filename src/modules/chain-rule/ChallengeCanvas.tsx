@@ -2,8 +2,8 @@
 
 import React from 'react';
 import type { Challenge } from '@/core/types';
-import { ComputationGraph } from './ComputationGraph';
-import { ChainCalculator } from './Helpers';
+import { ComputationGraph, type ComputationGraphProps } from './ComputationGraph';
+import { ChainCalculator, type ChainCalculatorProps } from './Helpers';
 
 interface Props {
   challenge: Challenge;
@@ -13,6 +13,7 @@ interface Props {
 export function ChallengeCanvas({ challenge, onComplete }: Props) {
   const props = (challenge.props ?? {}) as Record<string, unknown>;
   const component = (challenge.component ?? 'ComputationGraph') as string;
+  const sharedProps = props as Partial<ComputationGraphProps & ChainCalculatorProps>;
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 16, padding: 20 }}>
@@ -23,8 +24,8 @@ export function ChallengeCanvas({ challenge, onComplete }: Props) {
 
       <div style={{ flex: 1, minHeight: 0 }}>
         {component === 'ChainCalculator'
-          ? <ChainCalculator {...props as any} challengeMode />
-          : <ComputationGraph {...props as any} showForward showBackward />
+          ? <ChainCalculator {...sharedProps} challengeMode />
+          : <ComputationGraph {...sharedProps} showForward showBackward />
         }
       </div>
 

@@ -440,7 +440,11 @@ export function PartialDerivativeSlicer({
 
   // When axis changes, update frozen value
   useEffect(() => {
-    setFrozen(axis === 'x' ? ballY : ballX);
+    const frame = requestAnimationFrame(() => {
+      setFrozen(axis === 'x' ? ballY : ballX);
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, [axis, ballX, ballY]);
 
   const W = 560, H = 320;

@@ -260,9 +260,10 @@ function DragHandle({
   const rafId = useRef<number>(0);
   const pending = useRef<Vec2 | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // RAF loop — applies pending drag position at most once per frame
-  const flushDrag = useCallback(() => {
+  function flushDrag() {
     if (pending.current) {
       onDrag(pending.current);
       pending.current = null;
@@ -270,16 +271,17 @@ function DragHandle({
     if (dragging.current) {
       rafId.current = requestAnimationFrame(flushDrag);
     }
-  }, [onDrag]);
+  }
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     dragging.current = true;
+    setIsDragging(true);
     (e.target as SVGElement).setPointerCapture(e.pointerId);
     // Start RAF loop
     rafId.current = requestAnimationFrame(flushDrag);
-  }, [flushDrag]);
+  }, []);
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
@@ -304,6 +306,7 @@ function DragHandle({
 
   const handlePointerUp = useCallback(() => {
     dragging.current = false;
+    setIsDragging(false);
     cancelAnimationFrame(rafId.current);
     // Flush any remaining pending position
     if (pending.current) {
@@ -318,7 +321,7 @@ function DragHandle({
   }, []);
 
   const [sx, sy] = toSvg(pos.x, pos.y);
-  const activeRadius = isHovered || dragging.current ? radius + 2 : radius;
+  const activeRadius = isHovered || isDragging ? radius + 2 : radius;
 
   return (
     <g
@@ -341,7 +344,7 @@ function DragHandle({
       <circle
         cx={sx} cy={sy} r={activeRadius}
         fill={color} stroke="white" strokeWidth={2}
-        style={{ cursor: dragging.current ? 'grabbing' : 'grab' }}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -444,6 +447,7 @@ export function VectorTransform(props: VectorTransformProps) {
   // ── ViewBox state (zoom/pan) ──
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, w: CANVAS_SIZE, h: CANVAS_SIZE });
   const isPanning = useRef(false);
+  const [isPanningActive, setIsPanningActive] = useState(false);
   const panStart = useRef({ x: 0, y: 0, vbx: 0, vby: 0 });
 
   // Wheel zoom — zoom toward cursor
@@ -478,6 +482,7 @@ export function VectorTransform(props: VectorTransformProps) {
     const target = e.target as SVGElement;
     if (target.tagName === 'circle' || target.closest('[data-drag-handle]')) return;
     isPanning.current = true;
+    setIsPanningActive(true);
     panStart.current = { x: e.clientX, y: e.clientY, vbx: viewBox.x, vby: viewBox.y };
     e.currentTarget.setPointerCapture(e.pointerId);
   }, [viewBox.x, viewBox.y]);
@@ -495,6 +500,7 @@ export function VectorTransform(props: VectorTransformProps) {
 
   const handleBgPointerUp = useCallback(() => {
     isPanning.current = false;
+    setIsPanningActive(false);
   }, []);
 
   const resetView = useCallback(() => {
@@ -518,14 +524,22 @@ export function VectorTransform(props: VectorTransformProps) {
 
   // Sync with prop changes (mode switch resets vectors)
   useEffect(() => {
-    if (initialVectors) setVecs(initialVectors);
-  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!initialVectors) return;
+    const frame = requestAnimationFrame(() => {
+      setVecs(initialVectors);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [initialVectors, mode]);
 
   useEffect(() => {
-    if (props.scalarMultiplier !== undefined) setScalar(props.scalarMultiplier);
+    if (props.scalarMultiplier === undefined) return;
+    const frame = requestAnimationFrame(() => {
+      setScalar(props.scalarMultiplier ?? 1);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [props.scalarMultiplier]);
 
-  const updateVec = useCallback((index: number, v: Vec2) => {
+  function updateVec(index: number, v: Vec2) {
     setVecs((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], ...v };
@@ -535,7 +549,7 @@ export function VectorTransform(props: VectorTransformProps) {
       }
       return next;
     });
-  }, [props.onVectorsChange]);
+  }
 
   const a = vecs[0] ?? { x: 3, y: 2 };
   const b = vecs[1] ?? { x: 1, y: 3 };
@@ -956,7 +970,7 @@ export function VectorTransform(props: VectorTransformProps) {
           background: 'var(--viz-bg-gradient)',
           borderRadius: 'var(--radius-md)',
           touchAction: 'none',
-          cursor: isPanning.current ? 'grabbing' : 'default',
+          cursor: isPanningActive ? 'grabbing' : 'default',
           userSelect: 'none',
         }}
         onPointerDown={handleBgPointerDown}

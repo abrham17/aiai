@@ -1,4 +1,4 @@
-import type { Module } from './types';
+import type { Module, ModuleBundle } from './types';
 
 /**
  * Module Registry
@@ -7,7 +7,7 @@ import type { Module } from './types';
  * it just provides the module data which contains its own visualizer.
  */
 
-const moduleRegistry: Record<string, () => Promise<any>> = {
+const moduleRegistry: Record<string, () => Promise<Module | ModuleBundle>> = {
   optimization: () => import('@/modules/optimization'),
   eigenvalues: () => import('@/modules/eigenvalues'),
   matrices: () => import('@/modules/matrices'),
@@ -16,15 +16,19 @@ const moduleRegistry: Record<string, () => Promise<any>> = {
   'chain-rule': () => import('@/modules/chain-rule'),
 };
 
+function isModuleBundle(mod: Module | ModuleBundle): mod is ModuleBundle {
+  return 'moduleData' in mod;
+}
+
 export async function getModule(moduleId: string): Promise<Module | null> {
   const loader = moduleRegistry[moduleId];
   if (!loader) return null;
   const mod = await loader();
   // If the module has moduleData export (new structure), merge it.
   // Otherwise, it might be the module object itself.
-  if ((mod as any).moduleData) {
+  if (isModuleBundle(mod)) {
     return {
-      ...(mod as any).moduleData,
+      ...mod.moduleData,
       Visualization: mod.Visualization,
       ChallengeCanvas: mod.ChallengeCanvas,
     };

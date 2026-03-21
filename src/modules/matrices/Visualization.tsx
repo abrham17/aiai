@@ -265,8 +265,9 @@ function DragHandle({
   const rafId = useRef<number>(0);
   const pending = useRef<Vec2 | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const flushDrag = useCallback(() => {
+  function flushDrag() {
     if (pending.current) {
       onDrag(pending.current);
       pending.current = null;
@@ -274,15 +275,16 @@ function DragHandle({
     if (dragging.current) {
       rafId.current = requestAnimationFrame(flushDrag);
     }
-  }, [onDrag]);
+  }
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     dragging.current = true;
+    setIsDragging(true);
     (e.target as SVGElement).setPointerCapture(e.pointerId);
     rafId.current = requestAnimationFrame(flushDrag);
-  }, [flushDrag]);
+  }, []);
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
@@ -303,6 +305,7 @@ function DragHandle({
 
   const handlePointerUp = useCallback(() => {
     dragging.current = false;
+    setIsDragging(false);
     cancelAnimationFrame(rafId.current);
     if (pending.current) {
       onDrag(pending.current);
@@ -331,7 +334,7 @@ function DragHandle({
       <circle
         cx={sx} cy={sy} r={activeRadius}
         fill={color} stroke="white" strokeWidth={2}
-        style={{ cursor: dragging.current ? 'grabbing' : 'grab' }}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -460,6 +463,7 @@ export function MatrixTransform(props: MatrixTransformProps) {
   // ── ViewBox state (zoom/pan) ──
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, w: CANVAS_SIZE, h: CANVAS_SIZE });
   const isPanning = useRef(false);
+  const [isPanningActive, setIsPanningActive] = useState(false);
   const panStart = useRef({ x: 0, y: 0, vbx: 0, vby: 0 });
 
   useEffect(() => {
@@ -485,6 +489,7 @@ export function MatrixTransform(props: MatrixTransformProps) {
     const target = e.target as SVGElement;
     if (target.tagName === 'circle' || target.closest('[data-drag-handle]')) return;
     isPanning.current = true;
+    setIsPanningActive(true);
     panStart.current = { x: e.clientX, y: e.clientY, vbx: viewBox.x, vby: viewBox.y };
     e.currentTarget.setPointerCapture(e.pointerId);
   }, [viewBox.x, viewBox.y]);
@@ -501,6 +506,7 @@ export function MatrixTransform(props: MatrixTransformProps) {
 
   const handleBgPointerUp = useCallback(() => {
     isPanning.current = false;
+    setIsPanningActive(false);
   }, []);
 
   const resetView = useCallback(() => {
@@ -523,8 +529,11 @@ export function MatrixTransform(props: MatrixTransformProps) {
 
   // Reset when mode changes
   useEffect(() => {
-    setMat(initialMatrix ?? defaultMatrix());
-  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+    const frame = requestAnimationFrame(() => {
+      setMat(initialMatrix ?? defaultMatrix());
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [initialMatrix, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Basis vectors (columns of matrix)
   const e1Original: Vec2 = { x: 1, y: 0 };
@@ -784,7 +793,7 @@ export function MatrixTransform(props: MatrixTransformProps) {
           background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.03), transparent 70%)',
           borderRadius: 'var(--radius-md)',
           touchAction: 'none',
-          cursor: isPanning.current ? 'grabbing' : 'default',
+          cursor: isPanningActive ? 'grabbing' : 'default',
           userSelect: 'none',
         }}
         onPointerDown={handleBgPointerDown}

@@ -1,3 +1,7 @@
+> Historical reference only.
+> This brainstorm preserves product and curriculum ideas, but it is not the current implementation guide.
+> Current source of truth: `README.md`, `docs/module_authoring.md`, `src/core/registry.ts`, and `src/core/curriculum.ts`.
+
 # 🧠 AI Learning Playground — Deep Brainstorm
 
 > **Goal**: Build a Brilliant-style, visual-first AI learning platform that takes learners from basic math → research-paper level, entirely through interactive visualizations and minimal notes. No code sandboxes — pure visual understanding.

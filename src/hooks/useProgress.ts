@@ -67,8 +67,17 @@ export function useProgress() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    setProgress(loadProgress());
-    setIsLoaded(true);
+    let cancelled = false;
+    const frame = requestAnimationFrame(() => {
+      if (cancelled) return;
+      setProgress(loadProgress());
+      setIsLoaded(true);
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
   }, []);
 
   // Debounced save

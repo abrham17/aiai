@@ -1,5 +1,13 @@
 import React from 'react';
 
+export type VisualizationProps = Record<string, unknown>;
+export interface ChallengeCanvasProps {
+  challenge: Challenge;
+  onComplete: () => void;
+}
+export type VisualizationComponent = React.ComponentType<VisualizationProps>;
+export type ChallengeCanvasComponent = React.ComponentType<ChallengeCanvasProps>;
+
 /** A single tier in the curriculum (Tier 0, Tier 1, etc.) */
 export interface Tier {
   id: number;
@@ -41,12 +49,18 @@ export interface Module extends ModuleData {
    * The actual visualization component for this module.
    * This decoupled approach lets modules define their own rendering logic.
    */
-  Visualization?: React.ComponentType<any>;
+  Visualization?: VisualizationComponent;
 
   /**
    * Specialized challenge canvas for this module (optional).
    */
-  ChallengeCanvas?: React.ComponentType<{ challenge: Challenge; onComplete: () => void }>;
+  ChallengeCanvas?: ChallengeCanvasComponent;
+}
+
+export interface ModuleBundle {
+  moduleData: ModuleData;
+  Visualization?: VisualizationComponent;
+  ChallengeCanvas?: ChallengeCanvasComponent;
 }
 
 /** A single guided exploration step */
@@ -56,7 +70,7 @@ export interface Step {
   /**
    * Props passed to the module's Visualization component during this step.
    */
-  visualizationProps: Record<string, unknown>;
+  visualizationProps: VisualizationProps;
   content: {
     text: string;
     goDeeper?: GoDeeper;

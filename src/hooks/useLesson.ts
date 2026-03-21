@@ -18,6 +18,8 @@ interface UseLessonReturn {
   currentStep: Step;
   /** Index of the current step (0-based) */
   currentStepIndex: number;
+  /** Direction of the most recent step navigation */
+  navigationDirection: 'next' | 'back';
   /** Set of completed step IDs */
   completedSteps: Set<string>;
   /** Navigate to next step */
@@ -56,6 +58,7 @@ export function useLesson({
   onAnswerQuiz,
 }: UseLessonOptions): UseLessonReturn {
   const [currentStepIndex, setCurrentStepIndex] = useState(initialStepIndex);
+  const [navigationDirection, setNavigationDirection] = useState<'next' | 'back'>('next');
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set(initialCompletedSteps));
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
 
@@ -91,12 +94,14 @@ export function useLesson({
 
   const goNext = useCallback(() => {
     if (currentStepIndex < totalSteps - 1) {
+      setNavigationDirection('next');
       setCurrentStepIndex((i) => i + 1);
     }
   }, [currentStepIndex, totalSteps]);
 
   const goBack = useCallback(() => {
     if (currentStepIndex > 0) {
+      setNavigationDirection('back');
       setCurrentStepIndex((i) => i - 1);
     }
   }, [currentStepIndex]);
@@ -104,10 +109,13 @@ export function useLesson({
   const goToStep = useCallback(
     (index: number) => {
       if (index >= 0 && index < totalSteps) {
+        if (index !== currentStepIndex) {
+          setNavigationDirection(index > currentStepIndex ? 'next' : 'back');
+        }
         setCurrentStepIndex(index);
       }
     },
-    [totalSteps],
+    [currentStepIndex, totalSteps],
   );
 
   const completeCurrentStep = useCallback(() => {
@@ -153,6 +161,7 @@ export function useLesson({
   return {
     currentStep,
     currentStepIndex,
+    navigationDirection,
     completedSteps,
     goNext,
     goBack,

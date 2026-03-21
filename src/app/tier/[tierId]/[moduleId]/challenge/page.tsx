@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getModule } from '@/core/registry';
+import { useModuleData } from '@/hooks/useModuleData';
 import { useProgress } from '@/hooks/useProgress';
 import type { Module, Challenge } from '@/core/types';
 
@@ -235,21 +235,42 @@ export default function ChallengePage() {
   const router = useRouter();
   const tierId = Number(params.tierId);
   const moduleId = params.moduleId as string;
+  const { moduleData, isLoading } = useModuleData(moduleId);
+  const [selectedState, setSelectedState] = useState<{
+    moduleId: string | null;
+    challenge: Challenge | null;
+  }>({ moduleId: null, challenge: null });
 
-  const [moduleData, setModuleData] = useState<Module | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const selectedChallenge =
+    selectedState.moduleId === moduleId ? selectedState.challenge : null;
 
-  useEffect(() => {
-    setLoading(true);
-    getModule(moduleId).then(mod => { setModuleData(mod); setLoading(false); });
+  const handleSelectChallenge = useCallback((challenge: Challenge) => {
+    setSelectedState({ moduleId, challenge });
   }, [moduleId]);
 
-  if (loading || !moduleData) {
+  const handleBackToList = useCallback(() => {
+    setSelectedState({ moduleId, challenge: null });
+  }, [moduleId]);
+
+  if (isLoading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - var(--topnav-height))', background: 'var(--bg-base)', color: 'var(--text-muted)', fontFamily: 'var(--font-heading)', flexDirection: 'column', gap: '0.75rem' }}>
         <div style={{ width: 40, height: 40, border: '2px solid rgba(99,102,241,0.3)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
         Loading challenges…
+      </div>
+    );
+  }
+
+  if (!moduleData) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - var(--topnav-height))', background: 'var(--bg-base)', color: 'var(--text-muted)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+          <p>Module &quot;{moduleId}&quot; not found.</p>
+          <button className="btn btn--primary btn--sm" style={{ marginTop: '1rem' }} onClick={() => router.push('/')}>
+            ← Back to Dashboard
+          </button>
+        </div>
       </div>
     );
   }
@@ -261,7 +282,7 @@ export default function ChallengePage() {
         moduleData={moduleData}
         tierId={tierId}
         moduleId={moduleId}
-        onBack={() => setSelectedChallenge(null)}
+        onBack={handleBackToList}
       />
     );
   }
@@ -271,7 +292,7 @@ export default function ChallengePage() {
       moduleData={moduleData}
       tierId={tierId}
       moduleId={moduleId}
-      onSelect={setSelectedChallenge}
+      onSelect={handleSelectChallenge}
       onBack={() => router.push(`/tier/${tierId}/${moduleId}`)}
     />
   );

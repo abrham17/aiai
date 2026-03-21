@@ -36,9 +36,11 @@ export function TierCard({
   unlockRequirement,
   onClick,
 }: TierCardProps) {
-  const progress = moduleCount > 0 ? completedModules / moduleCount : 0;
+  const hasModules = moduleCount > 0;
+  const progress = hasModules ? completedModules / moduleCount : 0;
   const tierColor = TIER_COLORS[id] ?? 'var(--accent)';
-  const isCompleted = progress >= 1;
+  const isCompleted = hasModules && progress >= 1;
+  const progressLabel = hasModules ? `${completedModules}/${moduleCount} modules` : 'Coming soon';
 
   return (
     <div
@@ -141,10 +143,10 @@ export function TierCard({
       <div>
         <ProgressBar
           value={progress}
-          showPercentage
+          showPercentage={hasModules}
           size="sm"
           gradient={[tierColor, tierColor]}
-          label={`${completedModules}/${moduleCount} modules`}
+          label={progressLabel}
         />
       </div>
     </div>

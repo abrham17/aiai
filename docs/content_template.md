@@ -1,7 +1,8 @@
 # Content Design Template
 
 > Follow this process for **every** new module before writing code.
-> Output goes into `docs/content_spec.md` under the module's section.
+> Use this as a worksheet alongside `docs/module_authoring.md`.
+> Keep active design notes in a fresh module-specific document or in your PR notes; `docs/content_spec.md` is now historical.
 
 ---
 
@@ -121,7 +122,7 @@ Specify what the visualization component needs to support:
 
 ```
 Component: [name, e.g., VectorTransform]
-Library: [Mafs / Canvas / React Three Fiber / Konva]
+Library: [SVG / React Three Fiber / other current runtime renderer]
 
 Required features:
 - [ ] [feature 1]

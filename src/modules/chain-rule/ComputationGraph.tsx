@@ -252,8 +252,6 @@ export function ComputationGraph({
   allowBuild = false,
 }: ComputationGraphProps) {
   // ── Build mode ──
-  if (allowBuild) return <GraphBuilder />;
-
   const graphDef = useMemo(() => (PRESET_GRAPHS[graphId] ?? buildSingleGraph)(), [graphId]);
   const nodes = graphDef.nodes;
 
@@ -274,8 +272,8 @@ export function ComputationGraph({
   useEffect(() => {
     if (!isForwardPlaying) return;
     if (forwardStep === null || forwardStep >= nodes.length - 1) {
-      setIsForwardPlaying(false);
-      return;
+      const timeout = setTimeout(() => setIsForwardPlaying(false), 0);
+      return () => clearTimeout(timeout);
     }
     const t = setTimeout(() => setForwardStep(s => (s ?? 0) + 1), 600);
     return () => clearTimeout(t);
@@ -285,12 +283,16 @@ export function ComputationGraph({
   useEffect(() => {
     if (!isBackwardPlaying) return;
     if (backwardStep === null || backwardStep >= nodes.length - 1) {
-      setIsBackwardPlaying(false);
-      return;
+      const timeout = setTimeout(() => setIsBackwardPlaying(false), 0);
+      return () => clearTimeout(timeout);
     }
     const t = setTimeout(() => setBackwardStep(s => (s ?? 0) + 1), 600);
     return () => clearTimeout(t);
   }, [isBackwardPlaying, backwardStep, nodes.length]);
+
+  if (allowBuild) {
+    return <GraphBuilder />;
+  }
 
   const startForward = () => { setForwardStep(0); setBackwardStep(null); setIsForwardPlaying(true); };
   const startBackward = () => { setBackwardStep(0); setIsBackwardPlaying(true); };

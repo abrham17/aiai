@@ -1,11 +1,32 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-/**
- * LeetCode-style streak celebration popup.
- * Shows when user earns their first activity of the day.
- */
+function seededValue(seed: number) {
+  const raw = Math.sin(seed) * 10000;
+  return raw - Math.floor(raw);
+}
+
+function buildConfettiPieces(seedText: string) {
+  const seedBase = seedText.split('').reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+  const colors = ['#6366f1', '#a78bfa', '#34d399', '#fbbf24', '#f87171', '#60a5fa', '#e879f9', '#fb923c'];
+
+  return Array.from({ length: 50 }, (_, index) => {
+    const seed = seedBase + index * 17.173;
+    const colorIndex = Math.floor(seededValue(seed + 2) * colors.length) % colors.length;
+
+    return {
+      id: index,
+      x: seededValue(seed + 1) * 100,
+      delay: seededValue(seed + 3) * 0.8,
+      color: colors[colorIndex],
+      rotation: seededValue(seed + 4) * 360,
+      size: 6 + seededValue(seed + 5) * 6,
+      duration: 2 + seededValue(seed + 6),
+    };
+  });
+}
+
 export function StreakPopup({
   streakDays,
   show,
@@ -15,26 +36,20 @@ export function StreakPopup({
   show: boolean;
   onClose: () => void;
 }) {
-  const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
-
-  useEffect(() => {
-    if (show) {
-      setVisible(true);
-      setClosing(false);
-    }
-  }, [show]);
+  const isVisible = show || closing;
 
   const handleClose = useCallback(() => {
+    if (closing) return;
+
     setClosing(true);
     setTimeout(() => {
-      setVisible(false);
       setClosing(false);
       onClose();
     }, 300);
-  }, [onClose]);
+  }, [closing, onClose]);
 
-  if (!visible) return null;
+  if (!isVisible) return null;
 
   return (
     <div
@@ -53,7 +68,7 @@ export function StreakPopup({
       }}
     >
       <div
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
         style={{
           background: 'var(--bg-elevated)',
           borderRadius: 'var(--radius-lg)',
@@ -68,7 +83,6 @@ export function StreakPopup({
             : 'popupScaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
         }}
       >
-        {/* Fire emoji with pulse */}
         <div
           style={{
             fontSize: '3.5rem',
@@ -80,7 +94,6 @@ export function StreakPopup({
           🔥
         </div>
 
-        {/* Streak count */}
         <div
           style={{
             fontSize: '2.5rem',
@@ -106,11 +119,10 @@ export function StreakPopup({
             : streakDays <= 3
               ? 'Streak growing! Stay consistent!'
               : streakDays <= 7
-                ? "You're on fire! Amazing consistency! 🎯"
-                : "Incredible dedication! You're unstoppable! 🚀"}
+                ? "You're on fire! Amazing consistency!"
+                : "Incredible dedication! You're unstoppable!"}
         </div>
 
-        {/* Progress bar decoration */}
         <div
           style={{
             height: '4px',
@@ -148,9 +160,6 @@ export function StreakPopup({
   );
 }
 
-/**
- * Module completion celebration popup with confetti.
- */
 export function CompletionPopup({
   moduleName,
   show,
@@ -160,40 +169,21 @@ export function CompletionPopup({
   show: boolean;
   onClose: () => void;
 }) {
-  const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [confettiPieces, setConfettiPieces] = useState<
-    { id: number; x: number; delay: number; color: string; rotation: number; size: number }[]
-  >([]);
-
-  useEffect(() => {
-    if (show) {
-      setVisible(true);
-      setClosing(false);
-      // Generate confetti
-      const colors = ['#6366f1', '#a78bfa', '#34d399', '#fbbf24', '#f87171', '#60a5fa', '#e879f9', '#fb923c'];
-      const pieces = Array.from({ length: 50 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        delay: Math.random() * 0.8,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        rotation: Math.random() * 360,
-        size: 6 + Math.random() * 6,
-      }));
-      setConfettiPieces(pieces);
-    }
-  }, [show]);
+  const isVisible = show || closing;
+  const confettiPieces = useMemo(() => buildConfettiPieces(moduleName), [moduleName]);
 
   const handleClose = useCallback(() => {
+    if (closing) return;
+
     setClosing(true);
     setTimeout(() => {
-      setVisible(false);
       setClosing(false);
       onClose();
     }, 300);
-  }, [onClose]);
+  }, [closing, onClose]);
 
-  if (!visible) return null;
+  if (!isVisible) return null;
 
   return (
     <div
@@ -210,30 +200,28 @@ export function CompletionPopup({
         animation: closing ? 'fadeOut 0.3s ease forwards' : 'fadeIn 0.3s ease forwards',
       }}
     >
-      {/* Confetti layer */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        {confettiPieces.map((p) => (
+        {confettiPieces.map((piece) => (
           <div
-            key={p.id}
+            key={piece.id}
             style={{
               position: 'absolute',
-              left: `${p.x}%`,
+              left: `${piece.x}%`,
               top: '-10px',
-              width: `${p.size}px`,
-              height: `${p.size * 0.6}px`,
-              background: p.color,
+              width: `${piece.size}px`,
+              height: `${piece.size * 0.6}px`,
+              background: piece.color,
               borderRadius: '1px',
-              transform: `rotate(${p.rotation}deg)`,
-              animation: `confettiFall ${2 + Math.random()}s ease-in ${p.delay}s forwards`,
+              transform: `rotate(${piece.rotation}deg)`,
+              animation: `confettiFall ${piece.duration}s ease-in ${piece.delay}s forwards`,
               opacity: 0.9,
             }}
           />
         ))}
       </div>
 
-      {/* Modal */}
       <div
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
         style={{
           background: 'var(--bg-elevated)',
           borderRadius: 'var(--radius-lg)',

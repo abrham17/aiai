@@ -34,10 +34,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Read persisted theme on mount
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    if (stored === 'dark' || stored === 'light') {
-      setTheme(stored);
-    }
-    setMounted(true);
+    const frame = requestAnimationFrame(() => {
+      if (stored === 'dark' || stored === 'light') {
+        setTheme(stored);
+      }
+      setMounted(true);
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   // Apply data-theme attribute and persist

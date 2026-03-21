@@ -1,22 +1,8 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { MODULE_META } from '@/core/registry';
+import { getTierSummary } from '@/core/curriculum';
 import { useProgress } from '@/hooks/useProgress';
-
-// Tier metadata (will be centralized later)
-const TIER_INFO: Record<number, { title: string; emoji: string; description: string }> = {
-  0: {
-    title: 'Mathematical Foundations',
-    emoji: '🟢',
-    description: 'Vectors, matrices, calculus, probability — the building blocks of everything in AI.',
-  },
-  1: { title: 'ML Fundamentals', emoji: '🔵', description: 'Linear regression, gradient descent, classification.' },
-  2: { title: 'Deep Learning Core', emoji: '🟣', description: 'Neural networks, backpropagation, CNNs.' },
-  3: { title: 'Advanced Architectures', emoji: '🟡', description: 'Transformers, attention, generative models.' },
-  4: { title: 'Frontiers & Applications', emoji: '🔴', description: 'Reinforcement learning, multimodal AI, emergence.' },
-  5: { title: 'Research & Open Problems', emoji: '🟤', description: 'Alignment, scaling laws, open problems.' },
-};
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   beginner: 'var(--color-success)',
@@ -30,9 +16,9 @@ export default function TierOverviewPage() {
   const router = useRouter();
   const tierId = Number(params.tierId);
 
-  const tierInfo = TIER_INFO[tierId];
-  const modules = MODULE_META.filter((m) => m.tierId === tierId);
-  const { getModuleProgress } = useProgress();
+  const { progress, isLoaded, getModuleProgress } = useProgress();
+  const tierInfo = getTierSummary(tierId, isLoaded ? progress : undefined);
+  const modules = tierInfo?.modules ?? [];
 
   if (!tierInfo) {
     return (

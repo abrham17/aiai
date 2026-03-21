@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useProgress } from '@/hooks/useProgress';
 
@@ -23,8 +24,7 @@ export function TopNav({ currentPath = '/' }: TopNavProps) {
         transition: 'background var(--transition-slow), border-color var(--transition-slow)',
       }}
     >
-      {/* Left: Logo */}
-      <a
+      <Link
         href="/"
         style={{
           display: 'flex',
@@ -45,9 +45,8 @@ export function TopNav({ currentPath = '/' }: TopNavProps) {
         >
           AI Playground
         </span>
-      </a>
+      </Link>
 
-      {/* Center: Breadcrumb */}
       <div
         style={{
           display: 'flex',
@@ -62,7 +61,6 @@ export function TopNav({ currentPath = '/' }: TopNavProps) {
         )}
       </div>
 
-      {/* Right: Actions */}
       <div
         style={{
           display: 'flex',
@@ -106,28 +104,28 @@ function Breadcrumb({ path }: { path: string }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-      <a
+      <Link
         href="/"
         style={{
           color: 'var(--text-muted)',
           textDecoration: 'none',
           transition: 'color var(--transition-fast)',
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = 'var(--text-secondary)';
+        onMouseEnter={(event) => {
+          event.currentTarget.style.color = 'var(--text-secondary)';
         }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = 'var(--text-muted)';
+        onMouseLeave={(event) => {
+          event.currentTarget.style.color = 'var(--text-muted)';
         }}
       >
         Home
-      </a>
-      {segments.map((segment, i) => (
-        <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+      </Link>
+      {segments.map((segment, index) => (
+        <span key={segment + index} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
           <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>›</span>
           <span
             style={{
-              color: i === segments.length - 1 ? 'var(--text-secondary)' : 'var(--text-muted)',
+              color: index === segments.length - 1 ? 'var(--text-secondary)' : 'var(--text-muted)',
               textTransform: 'capitalize',
             }}
           >
