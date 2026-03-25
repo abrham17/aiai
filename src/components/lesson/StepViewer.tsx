@@ -53,7 +53,7 @@ export function StepViewer({
 
   function renderVisualization() {
     if (!Visualization) return null;
-    return <Visualization {...step.visualizationProps} />;
+    return <Visualization presentation="guided" {...step.visualizationProps} />;
   }
 
   return (

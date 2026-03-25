@@ -221,16 +221,6 @@ p {
   transform: translateY(-2px);
 }
 
-.tier-card--locked {
-  opacity: 0.6;
-  filter: grayscale(0.5);
-}
-
-.tier-card--locked:hover {
-  transform: none;
-  box-shadow: var(--shadow-sm);
-  cursor: not-allowed;
-}
 
 /* ── Viz Container ── */
 .viz-container {

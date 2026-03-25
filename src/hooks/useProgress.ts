@@ -14,11 +14,11 @@ function createDefaultProgress(): ProgressState {
     streak: { current: 0, longest: 0, lastActiveDate: '' },
     tiers: {
       0: { unlocked: true, modules: {} },
-      1: { unlocked: false, modules: {} },
-      2: { unlocked: false, modules: {} },
-      3: { unlocked: false, modules: {} },
-      4: { unlocked: false, modules: {} },
-      5: { unlocked: false, modules: {} },
+      1: { unlocked: true, modules: {} },
+      2: { unlocked: true, modules: {} },
+      3: { unlocked: true, modules: {} },
+      4: { unlocked: true, modules: {} },
+      5: { unlocked: true, modules: {} },
     },
     badges: [],
     activityLog: [],
@@ -177,7 +177,7 @@ export function useProgress() {
   const updateModule = useCallback(
     (tierId: number, moduleId: string, updater: (m: ModuleProgress) => ModuleProgress) => {
       update((prev) => {
-        const tier: TierProgress = prev.tiers[tierId] ?? { unlocked: false, modules: {} };
+        const tier: TierProgress = prev.tiers[tierId] ?? { unlocked: true, modules: {} };
         const mod = tier.modules[moduleId] ?? createDefaultModuleProgress();
         const updated = updater(mod);
         return {

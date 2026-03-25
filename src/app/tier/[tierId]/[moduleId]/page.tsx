@@ -33,14 +33,14 @@ export default function ModuleHubPage() {
         }}
       >
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+          <div style={{ fontSize: '2.25rem', marginBottom: '1rem', fontWeight: 700 }}>404</div>
           <p>Module &quot;{moduleId}&quot; not found.</p>
           <button
             className="btn btn--primary btn--sm"
             style={{ marginTop: '1rem' }}
             onClick={() => router.push('/')}
           >
-            ← Back to Dashboard
+            &larr; Back to Dashboard
           </button>
         </div>
       </div>
@@ -57,32 +57,42 @@ export default function ModuleHubPage() {
   const phases = [
     {
       id: 'guided',
-      emoji: '📖',
+      emoji: moduleData.steps.length > 0 ? '\uD83D\uDCD6' : '\uD83D\uDCC4',
       title: 'Guided Exploration',
       description: `Walk through ${guidedTotal} interactive steps with visualizations, quizzes, and go-deeper sections.`,
       progress: guidedFraction,
       progressLabel: `${guidedCompleted}/${guidedTotal} steps`,
-      available: true,
+      recommendation: guidedFraction < 1 ? 'Recommended next' : null,
       href: `${basePath}/guided`,
     },
     {
       id: 'playground',
-      emoji: '🧪',
+      emoji: '\uD83E\uDDEA',
       title: 'Free Playground',
       description: moduleData.playground.description,
       progress: progress.playgroundVisited ? 1 : 0,
       progressLabel: progress.playgroundVisited ? 'Visited' : 'Not started',
-      available: guidedFraction >= 0.5,
+      recommendation:
+        guidedFraction >= 0.5
+          ? progress.playgroundVisited
+            ? null
+            : 'Recommended next'
+          : 'Recommended after ~50% of guided exploration',
       href: `${basePath}/playground`,
     },
     {
       id: 'challenge',
-      emoji: '🏆',
+      emoji: '\uD83C\uDFC6',
       title: 'Challenges',
       description: `${challengesTotal} challenges to test your understanding.`,
       progress: challengesTotal > 0 ? challengesCompleted / challengesTotal : 0,
       progressLabel: `${challengesCompleted}/${challengesTotal} completed`,
-      available: guidedFraction >= 0.8,
+      recommendation:
+        guidedFraction >= 0.8
+          ? challengesCompleted < challengesTotal
+            ? 'Recommended next'
+            : null
+          : 'Recommended after ~80% of guided exploration',
       href: `${basePath}/challenge`,
     },
   ];
@@ -96,7 +106,6 @@ export default function ModuleHubPage() {
         padding: '2rem',
       }}
     >
-      {/* Header */}
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <button
           onClick={() => router.push('/')}
@@ -113,7 +122,7 @@ export default function ModuleHubPage() {
             gap: '0.375rem',
           }}
         >
-          ← Dashboard
+          &larr; Dashboard
         </button>
 
         <div style={{ marginBottom: '2rem' }}>
@@ -131,12 +140,12 @@ export default function ModuleHubPage() {
                 fontWeight: 600,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
-                color: 'var(--tier-0)',
+                color: `var(--tier-${tierId})`,
               }}
             >
               Tier {tierId}
             </span>
-            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>•</span>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>&bull;</span>
             <span
               style={{
                 fontSize: '0.6875rem',
@@ -174,7 +183,6 @@ export default function ModuleHubPage() {
             {moduleData.description}
           </p>
 
-          {/* Tags */}
           <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
             {moduleData.tags.map((tag) => (
               <span
@@ -194,117 +202,125 @@ export default function ModuleHubPage() {
           </div>
         </div>
 
-        {/* Phase cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {phases.map((phase) => (
-            <div
-              key={phase.id}
-              onClick={phase.available ? () => router.push(phase.href) : undefined}
-              role={phase.available ? 'button' : undefined}
-              tabIndex={phase.available ? 0 : undefined}
-              onKeyDown={
-                phase.available
-                  ? (e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        router.push(phase.href);
-                      }
-                    }
-                  : undefined
-              }
-              style={{
-                padding: '1.25rem 1.5rem',
-                borderRadius: 'var(--radius-lg)',
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border-subtle)',
-                cursor: phase.available ? 'pointer' : 'not-allowed',
-                opacity: phase.available ? 1 : 0.5,
-                transition: 'all var(--transition-normal)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1.25rem',
-              }}
-              onMouseEnter={(e) => {
-                if (phase.available) {
-                  e.currentTarget.style.borderColor = 'var(--border-default)';
+          {phases.map((phase) => {
+            const borderColor =
+              phase.recommendation === 'Recommended next' ? 'var(--accent)' : 'var(--border-subtle)';
+
+            return (
+              <div
+                key={phase.id}
+                onClick={() => router.push(phase.href)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    router.push(phase.href);
+                  }
+                }}
+                style={{
+                  padding: '1.25rem 1.5rem',
+                  borderRadius: 'var(--radius-lg)',
+                  background: 'var(--bg-surface)',
+                  border: `1px solid ${borderColor}`,
+                  cursor: 'pointer',
+                  transition: 'all var(--transition-normal)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1.25rem',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor =
+                    borderColor === 'var(--border-subtle)' ? 'var(--border-default)' : borderColor;
                   e.currentTarget.style.boxShadow = 'var(--shadow-md)';
                   e.currentTarget.style.transform = 'translateY(-1px)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.transform = 'none';
-              }}
-            >
-              <span style={{ fontSize: '2rem' }}>{phase.emoji}</span>
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = borderColor;
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.transform = 'none';
+                }}
+              >
+                <span style={{ fontSize: '2rem' }}>{phase.emoji}</span>
 
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  <h3
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <h3
+                      style={{
+                        fontFamily: 'var(--font-heading)',
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color: 'var(--text-primary)',
+                        margin: 0,
+                      }}
+                    >
+                      {phase.title}
+                    </h3>
+                  </div>
+                  <p
                     style={{
-                      fontFamily: 'var(--font-heading)',
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      color: 'var(--text-primary)',
+                      fontSize: '0.8125rem',
+                      color: 'var(--text-secondary)',
                       margin: 0,
+                      lineHeight: 1.5,
                     }}
                   >
-                    {phase.title}
-                  </h3>
-                  {!phase.available && (
-                    <span style={{ fontSize: '0.75rem' }}>🔒</span>
+                    {phase.description}
+                  </p>
+                  {phase.recommendation && (
+                    <div
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color:
+                          phase.recommendation === 'Recommended next'
+                            ? 'var(--accent)'
+                            : 'var(--text-muted)',
+                        marginTop: '0.5rem',
+                      }}
+                    >
+                      {phase.recommendation}
+                    </div>
                   )}
                 </div>
-                <p
-                  style={{
-                    fontSize: '0.8125rem',
-                    color: 'var(--text-secondary)',
-                    margin: 0,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {phase.description}
-                </p>
-              </div>
 
-              {/* Progress indicator */}
-              <div style={{ textAlign: 'right', flexShrink: 0, minWidth: '80px' }}>
-                <div
-                  style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    color: phase.progress >= 1 ? 'var(--success)' : 'var(--text-muted)',
-                    marginBottom: '0.375rem',
-                  }}
-                >
-                  {phase.progressLabel}
-                </div>
-                <div
-                  style={{
-                    width: '80px',
-                    height: '4px',
-                    borderRadius: '2px',
-                    background: 'var(--bg-hover)',
-                    overflow: 'hidden',
-                  }}
-                >
+                <div style={{ textAlign: 'right', flexShrink: 0, minWidth: '80px' }}>
                   <div
                     style={{
-                      height: '100%',
-                      width: `${phase.progress * 100}%`,
-                      borderRadius: '2px',
-                      background: phase.progress >= 1 ? 'var(--success)' : 'var(--accent)',
-                      transition: 'width var(--transition-base)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: phase.progress >= 1 ? 'var(--success)' : 'var(--text-muted)',
+                      marginBottom: '0.375rem',
                     }}
-                  />
+                  >
+                    {phase.progressLabel}
+                  </div>
+                  <div
+                    style={{
+                      width: '80px',
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: 'var(--bg-hover)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${phase.progress * 100}%`,
+                        borderRadius: '2px',
+                        background: phase.progress >= 1 ? 'var(--success)' : 'var(--accent)',
+                        transition: 'width var(--transition-base)',
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Try This suggestions (from playground) */}
         {moduleData.playground.tryThis && moduleData.playground.tryThis.length > 0 && (
           <div
             style={{
@@ -324,7 +340,7 @@ export default function ModuleHubPage() {
                 margin: '0 0 0.75rem 0',
               }}
             >
-              💡 Try This
+              Try This
             </h3>
             <ul
               style={{
@@ -354,7 +370,7 @@ export default function ModuleHubPage() {
                       color: 'var(--accent)',
                     }}
                   >
-                    →
+                    &rarr;
                   </span>
                   {item}
                 </li>

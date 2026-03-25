@@ -8,7 +8,7 @@ const optimizationModule: ModuleData = {
   description:
     'From slopes to Adam — build a deep understanding of calculus and gradient descent from first principles. Every formula earns its visual.',
   tags: ['gradient-descent', 'calculus', 'derivatives', 'loss-function', 'adam', 'SGD'],
-  prerequisites: ['vectors', 'matrices'],
+  prerequisites: ['vectors', 'matrices', 'partial-derivatives'],
   difficulty: 'intermediate',
   estimatedMinutes: 60,
 

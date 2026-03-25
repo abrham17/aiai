@@ -7,7 +7,7 @@ export interface Tier {
   emoji: string;
   color: string;
   description: string;
-  unlockThreshold: number;
+  recommendedCompletionRatio: number;
   clusters: Cluster[];
 }
 

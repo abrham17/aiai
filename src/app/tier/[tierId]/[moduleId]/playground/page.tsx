@@ -14,6 +14,13 @@ const GRAPH_PRESETS = [
   { id: 'deep', label: 'Deep chain', description: '10 operations' },
 ];
 
+const NORMS_DISTANCE_VISIBLE_PARAMS: Record<string, string[]> = {
+  norm: ['mode', 'metric', 'showUnitBall', 'vectorX', 'vectorY'],
+  distance: ['mode', 'metric', 'showNeighborhood', 'neighborhoodRadius'],
+  nearest: ['mode', 'metric', 'preset', 'compareMetrics', 'showNeighborhood', 'queryX', 'queryY'],
+  cosine: ['mode', 'showProjection', 'vectorX', 'vectorY', 'otherVectorX', 'otherVectorY'],
+};
+
 type ParamValue = number | boolean | string;
 type ParamMap = Record<string, ParamValue>;
 
@@ -47,6 +54,15 @@ export default function PlaygroundPage() {
 
   const paramValues = paramState.moduleId === moduleId ? paramState.values : defaultParamValues;
   const selectedGraph = graphState.moduleId === moduleId ? graphState.graphId : 'single';
+  const selectedMode = String(paramValues.mode ?? defaultParamValues.mode ?? 'norm');
+
+  const visibleParameters = useMemo(() => {
+    if (!moduleData) return [];
+    if (moduleId !== 'norms-distance') return moduleData.playground.parameters;
+
+    const visibleIds = NORMS_DISTANCE_VISIBLE_PARAMS[selectedMode] ?? NORMS_DISTANCE_VISIBLE_PARAMS.norm;
+    return moduleData.playground.parameters.filter((param) => visibleIds.includes(param.id));
+  }, [moduleData, moduleId, selectedMode]);
 
   useEffect(() => {
     if (!moduleData) return;
@@ -130,6 +146,7 @@ export default function PlaygroundPage() {
   const vizProps: VisualizationProps = isChainRule
     ? {
         ...paramValues,
+        presentation: 'playground',
         component: 'ComputationGraph',
         graphId: selectedGraph,
         showForward: true,
@@ -141,7 +158,7 @@ export default function PlaygroundPage() {
         animateBackward: paramValues.animateBackward ?? true,
         interactive: true,
       }
-    : { ...paramValues, interactive: true };
+    : { ...paramValues, presentation: 'playground', interactive: true };
 
   return (
     <div
@@ -301,8 +318,20 @@ export default function PlaygroundPage() {
             >
               Parameters
             </div>
+            {moduleId === 'norms-distance' && (
+              <div
+                style={{
+                  fontSize: '0.72rem',
+                  color: 'var(--text-muted)',
+                  lineHeight: 1.45,
+                  marginBottom: 8,
+                }}
+              >
+                Controls change with the current mode so the sidebar only shows the inputs that matter right now.
+              </div>
+            )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {moduleData.playground.parameters.map((param) => (
+              {visibleParameters.map((param) => (
                 <div
                   key={param.id}
                   style={{

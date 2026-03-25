@@ -3,7 +3,6 @@
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Badge } from '@/components/ui/Badge';
 
-// Tier color mapping
 const TIER_COLORS: Record<number, string> = {
   0: 'var(--tier-0)',
   1: 'var(--tier-1)',
@@ -20,8 +19,7 @@ interface TierCardProps {
   description: string;
   moduleCount: number;
   completedModules: number;
-  isUnlocked: boolean;
-  unlockRequirement?: string;
+  recommendation?: string;
   onClick?: () => void;
 }
 
@@ -32,8 +30,7 @@ export function TierCard({
   description,
   moduleCount,
   completedModules,
-  isUnlocked,
-  unlockRequirement,
+  recommendation,
   onClick,
 }: TierCardProps) {
   const hasModules = moduleCount > 0;
@@ -44,19 +41,19 @@ export function TierCard({
 
   return (
     <div
-      className={`tier-card ${!isUnlocked ? 'tier-card--locked' : ''}`}
+      className="tier-card"
       style={{
         ['--tier-color' as string]: tierColor,
         padding: '1.5rem',
-        cursor: isUnlocked ? 'pointer' : 'not-allowed',
+        cursor: onClick ? 'pointer' : 'default',
         position: 'relative',
         overflow: 'hidden',
       }}
-      onClick={isUnlocked ? onClick : undefined}
-      role={isUnlocked ? 'button' : undefined}
-      tabIndex={isUnlocked ? 0 : undefined}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
       onKeyDown={
-        isUnlocked && onClick
+        onClick
           ? (e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -66,7 +63,6 @@ export function TierCard({
           : undefined
       }
     >
-      {/* Tier accent background glow */}
       <div
         style={{
           position: 'absolute',
@@ -79,7 +75,6 @@ export function TierCard({
         }}
       />
 
-      {/* Header */}
       <div
         style={{
           display: 'flex',
@@ -118,16 +113,9 @@ export function TierCard({
           </div>
         </div>
 
-        {/* Status badge */}
-        {!isUnlocked && (
-          <span style={{ fontSize: '1.25rem' }}>🔒</span>
-        )}
-        {isCompleted && (
-          <Badge variant="success">✓ Complete</Badge>
-        )}
+        {isCompleted && <Badge variant="success">Complete</Badge>}
       </div>
 
-      {/* Description */}
       <p
         style={{
           fontSize: '0.875rem',
@@ -136,10 +124,22 @@ export function TierCard({
           lineHeight: 1.5,
         }}
       >
-        {isUnlocked ? description : unlockRequirement ?? `Complete previous tier to unlock`}
+        {description}
       </p>
 
-      {/* Progress */}
+      {recommendation && (
+        <div
+          style={{
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            color: tierColor,
+            marginBottom: '1rem',
+          }}
+        >
+          {recommendation}
+        </div>
+      )}
+
       <div>
         <ProgressBar
           value={progress}

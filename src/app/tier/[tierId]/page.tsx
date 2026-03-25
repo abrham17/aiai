@@ -33,10 +33,14 @@ export default function TierOverviewPage() {
         }}
       >
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+          <div style={{ fontSize: '2.25rem', marginBottom: '1rem', fontWeight: 700 }}>404</div>
           <p>Tier {tierId} not found.</p>
-          <button className="btn btn--primary btn--sm" style={{ marginTop: '1rem' }} onClick={() => router.push('/')}>
-            ← Back to Dashboard
+          <button
+            className="btn btn--primary btn--sm"
+            style={{ marginTop: '1rem' }}
+            onClick={() => router.push('/')}
+          >
+            &larr; Back to Dashboard
           </button>
         </div>
       </div>
@@ -44,6 +48,7 @@ export default function TierOverviewPage() {
   }
 
   const tierColor = `var(--tier-${tierId})`;
+  const moduleTitleById = new Map(modules.map((moduleMeta) => [moduleMeta.id, moduleMeta.title]));
 
   return (
     <div
@@ -55,7 +60,6 @@ export default function TierOverviewPage() {
       }}
     >
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        {/* Back nav */}
         <button
           onClick={() => router.push('/')}
           style={{
@@ -71,10 +75,9 @@ export default function TierOverviewPage() {
             gap: '0.375rem',
           }}
         >
-          ← Dashboard
+          &larr; Dashboard
         </button>
 
-        {/* Tier header */}
         <div
           style={{
             marginBottom: '2rem',
@@ -115,7 +118,6 @@ export default function TierOverviewPage() {
           </p>
         </div>
 
-        {/* Module list */}
         {modules.length === 0 ? (
           <div
             style={{
@@ -124,10 +126,8 @@ export default function TierOverviewPage() {
               color: 'var(--text-muted)',
             }}
           >
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🚧</div>
-            <p style={{ fontSize: '0.9375rem', margin: 0 }}>
-              Modules for this tier are coming soon.
-            </p>
+            <div style={{ fontSize: '1.5rem', marginBottom: '0.75rem', fontWeight: 700 }}>Soon</div>
+            <p style={{ fontSize: '0.9375rem', margin: 0 }}>Modules for this tier are coming soon.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -136,56 +136,69 @@ export default function TierOverviewPage() {
               const stepsCompleted = modProgress.stepsCompleted.length;
               const isStarted = modProgress.status === 'in-progress' || modProgress.status === 'completed';
               const isCompleted = modProgress.status === 'completed';
-              const prereqsMet = mod.prerequisites.length === 0 ||
-                mod.prerequisites.every((prereq) => {
-                  const p = getModuleProgress(tierId, prereq);
-                  return p.status === 'completed';
-                });
+              const prerequisitesMet = mod.prerequisites.every((prereq) => {
+                const prerequisiteProgress = getModuleProgress(tierId, prereq);
+                return prerequisiteProgress.status === 'completed';
+              });
+              const prerequisiteTitles = mod.prerequisites.map(
+                (prerequisiteId) => moduleTitleById.get(prerequisiteId) ?? prerequisiteId,
+              );
+              const recommendation =
+                isCompleted
+                  ? 'Completed'
+                  : isStarted
+                    ? 'Continue where you left off'
+                    : mod.prerequisites.length === 0
+                      ? i === 0
+                        ? 'Recommended start'
+                        : null
+                      : prerequisitesMet
+                        ? 'Recommended next'
+                        : `Best after ${prerequisiteTitles.join(', ')}`;
+              const borderColor =
+                isCompleted
+                  ? 'var(--success)'
+                  : recommendation === 'Recommended next' || recommendation === 'Recommended start'
+                    ? 'var(--accent)'
+                    : 'var(--border-subtle)';
 
               return (
                 <div
                   key={mod.id}
-                  onClick={prereqsMet ? () => router.push(`/tier/${tierId}/${mod.id}`) : undefined}
-                  role={prereqsMet ? 'button' : undefined}
-                  tabIndex={prereqsMet ? 0 : undefined}
-                  onKeyDown={
-                    prereqsMet
-                      ? (e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            router.push(`/tier/${tierId}/${mod.id}`);
-                          }
-                        }
-                      : undefined
-                  }
+                  onClick={() => router.push(`/tier/${tierId}/${mod.id}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      router.push(`/tier/${tierId}/${mod.id}`);
+                    }
+                  }}
                   className="animate-fade-in"
                   style={{
                     animationDelay: `${i * 0.06}s`,
                     padding: '1.25rem 1.5rem',
                     borderRadius: 'var(--radius-lg)',
                     background: 'var(--bg-surface)',
-                    border: `1px solid ${isCompleted ? 'var(--success)' : 'var(--border-subtle)'}`,
-                    cursor: prereqsMet ? 'pointer' : 'not-allowed',
-                    opacity: prereqsMet ? 1 : 0.5,
+                    border: `1px solid ${borderColor}`,
+                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '1.25rem',
                     transition: 'all var(--transition-normal)',
                   }}
                   onMouseEnter={(e) => {
-                    if (prereqsMet) {
-                      e.currentTarget.style.borderColor = 'var(--border-default)';
-                      e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                    }
+                    e.currentTarget.style.borderColor =
+                      borderColor === 'var(--border-subtle)' ? 'var(--border-default)' : borderColor;
+                    e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = isCompleted ? 'var(--success)' : 'var(--border-subtle)';
+                    e.currentTarget.style.borderColor = borderColor;
                     e.currentTarget.style.boxShadow = 'none';
                     e.currentTarget.style.transform = 'none';
                   }}
                 >
-                  {/* Module number / status */}
                   <span
                     style={{
                       width: '2.5rem',
@@ -209,10 +222,9 @@ export default function TierOverviewPage() {
                       flexShrink: 0,
                     }}
                   >
-                    {isCompleted ? '✓' : i + 1}
+                    {isCompleted ? 'Done' : i + 1}
                   </span>
 
-                  {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                       <h3
@@ -226,7 +238,6 @@ export default function TierOverviewPage() {
                       >
                         {mod.title}
                       </h3>
-                      {!prereqsMet && <span style={{ fontSize: '0.75rem' }}>🔒</span>}
                     </div>
                     <p
                       style={{
@@ -238,8 +249,15 @@ export default function TierOverviewPage() {
                     >
                       {mod.description}
                     </p>
-                    {/* Tags */}
-                    <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '0.375rem',
+                        marginTop: '0.5rem',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                      }}
+                    >
                       <span
                         style={{
                           padding: '0.125rem 0.375rem',
@@ -254,13 +272,28 @@ export default function TierOverviewPage() {
                       >
                         {mod.difficulty}
                       </span>
+                      {recommendation && (
+                        <span
+                          style={{
+                            fontSize: '0.6875rem',
+                            fontWeight: 600,
+                            color:
+                              recommendation === 'Completed'
+                                ? 'var(--success)'
+                                : recommendation === 'Recommended next' || recommendation === 'Recommended start'
+                                  ? 'var(--accent)'
+                                  : 'var(--text-muted)',
+                          }}
+                        >
+                          {recommendation}
+                        </span>
+                      )}
                       <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
                         ~{mod.estimatedMinutes} min
                       </span>
                     </div>
                   </div>
 
-                  {/* Progress / arrow */}
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     {isStarted && !isCompleted && (
                       <div
@@ -274,9 +307,7 @@ export default function TierOverviewPage() {
                         {stepsCompleted} steps done
                       </div>
                     )}
-                    {prereqsMet && (
-                      <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>→</span>
-                    )}
+                    <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>&rarr;</span>
                   </div>
                 </div>
               );

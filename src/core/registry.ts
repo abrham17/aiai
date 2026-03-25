@@ -8,11 +8,13 @@ import type { Module, ModuleBundle } from './types';
  */
 
 const moduleRegistry: Record<string, () => Promise<Module | ModuleBundle>> = {
-  optimization: () => import('@/modules/optimization'),
-  eigenvalues: () => import('@/modules/eigenvalues'),
-  matrices: () => import('@/modules/matrices'),
   vectors: () => import('@/modules/vectors'),
   'vector-spaces': () => import('@/modules/vector-spaces'),
+  'norms-distance': () => import('@/modules/norms-distance'),
+  matrices: () => import('@/modules/matrices'),
+  eigenvalues: () => import('@/modules/eigenvalues'),
+  'partial-derivatives': () => import('@/modules/partial-derivatives'),
+  optimization: () => import('@/modules/optimization'),
   'chain-rule': () => import('@/modules/chain-rule'),
 };
 
@@ -76,6 +78,17 @@ export const MODULE_META: ModuleMeta[] = [
     difficulty: 'beginner',
   },
   {
+    id: 'norms-distance',
+    tierId: 0,
+    clusterId: 'linear-algebra',
+    title: 'Norms & Distance Metrics',
+    description:
+      'Measure length, distance, and similarity with L1, L2, L_inf, and cosine.',
+    estimatedMinutes: 40,
+    prerequisites: ['vectors'],
+    difficulty: 'beginner',
+  },
+  {
     id: 'matrices',
     tierId: 0,
     clusterId: 'linear-algebra',
@@ -96,6 +109,17 @@ export const MODULE_META: ModuleMeta[] = [
     difficulty: 'intermediate',
   },
   {
+    id: 'partial-derivatives',
+    tierId: 0,
+    clusterId: 'calculus',
+    title: 'Partial Derivatives',
+    description:
+      'Learn how slopes work on surfaces and how partials assemble into the gradient.',
+    estimatedMinutes: 45,
+    prerequisites: ['vectors'],
+    difficulty: 'intermediate',
+  },
+  {
     id: 'optimization',
     tierId: 0,
     clusterId: 'optimization',
@@ -103,7 +127,7 @@ export const MODULE_META: ModuleMeta[] = [
     description:
       'From derivatives to Adam — build deep intuition for the algorithm that trains every neural network.',
     estimatedMinutes: 60,
-    prerequisites: ['vectors', 'matrices'],
+    prerequisites: ['vectors', 'matrices', 'partial-derivatives'],
     difficulty: 'intermediate',
   },
   {
