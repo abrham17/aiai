@@ -14,17 +14,6 @@ interface LLMVizProps {
 
 export default function LLMTrainingVisualization({ mode = 'tokenizer-interactive', intensity = 1 }: LLMVizProps) {
   const [inputText, setInputText] = useState('Deep learning is powerful');
-  const [loraRank, setLoraRank] = useState(intensity * 10);
-  const [temperature, setTemperature] = useState(1.0);
-
-  // Add global animation styles
-  const animationStyles = `
-    @keyframes spin-slow {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    .animate-spin-slow { animation: spin-slow 3s linear infinite; }
-  `;
   
   // ── Mode: Tokenizer ──
   const renderTokenizer = () => {
@@ -57,47 +46,28 @@ export default function LLMTrainingVisualization({ mode = 'tokenizer-interactive
   };
 
   const renderLoRA = () => {
-     const rank = loraRank;
-     const totalParams = rank * 256;
-     const percentFull = (rank / 64) * 100; // Assuming max rank is 64
-     
+     const rank = Math.max(2, Math.floor(intensity * 10));
      return (
         <div className="flex flex-col items-center gap-8 w-full max-w-lg">
             <div className="flex items-center gap-4">
                <div className="w-32 h-32 bg-slate-800 border-2 border-slate-600 rounded flex items-center justify-center relative overflow-hidden">
                   <div className="absolute inset-0 opacity-20 bg-[grid:10px_10px]" />
-                  <span className="text-[10px] font-bold text-slate-400 -rotate-45">FROZEN W</span>
+                  <span className="text-[10px] font-bold text-slate-400 rotate-[-45deg]">FROZEN W</span>
                </div>
                <span className="text-2xl text-slate-600 font-black">+</span>
                <div className="flex flex-col gap-2 items-center">
-                  <div className="w-32 h-10 bg-indigo-500/30 border border-indigo-400 rounded flex items-center justify-center transition-all">
-                     <span className="text-[10px] font-bold text-indigo-300">MATRIX A (r={Math.round(rank)})</span>
+                  <div className="w-32 h-10 bg-indigo-500/30 border border-indigo-400 rounded flex items-center justify-center">
+                     <span className="text-[10px] font-bold text-indigo-300">MATRIX A (r={rank})</span>
                   </div>
-                  <div className="w-10 h-32 bg-indigo-500/30 border border-indigo-400 rounded flex items-center justify-center transition-all">
-                     <span className="text-[10px] font-bold text-indigo-400" style={{ transform: 'rotate(-90deg)' }}>MATRIX B</span>
+                  <div className="w-10 h-32 bg-indigo-500/30 border border-indigo-400 rounded flex items-center justify-center">
+                     <span className="text-[10px] font-bold text-indigo-400 -rotate-90">MATRIX B</span>
                   </div>
                </div>
             </div>
-            
-            <div className="w-full bg-slate-800/50 p-4 rounded-lg border border-slate-700 space-y-4">
-               <div>
-                  <label htmlFor="rank-slider" className="text-xs text-slate-400 mb-2 block">LoRA Rank: <span className="text-indigo-400 font-bold">{Math.round(rank)}</span></label>
-                  <input
-                     id="rank-slider"
-                     type="range"
-                     min="2"
-                     max="64"
-                     value={rank}
-                     onChange={(e) => setLoraRank(parseFloat(e.target.value))}
-                     className="w-full cursor-pointer accent-indigo-500"
-                  />
-               </div>
-               
-               <div className="text-center border-t border-slate-700 pt-4">
-                  <span className="text-xs text-slate-400">Total Trainable Parameters: <span className="text-indigo-400 font-bold">{totalParams.toLocaleString()}</span></span>
-                  <div className="w-full h-2 bg-slate-900 mt-3 rounded overflow-hidden">
-                     <div className="h-full bg-indigo-500 rounded transition-all duration-300" style={{ width: `${Math.min(100, percentFull)}%` }} />
-                  </div>
+            <div className="text-center bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+               <span className="text-xs text-slate-400">Total Trainable Parameters: <span className="text-indigo-400 font-bold">{rank * 256}</span></span>
+               <div className="w-full h-1 bg-slate-900 mt-2 rounded">
+                  <div className="h-full bg-indigo-500" style={{ width: `${(rank / 10) * 100}%` }} />
                </div>
             </div>
         </div>
@@ -143,64 +113,25 @@ export default function LLMTrainingVisualization({ mode = 'tokenizer-interactive
     );
   };
 
-  const renderCLM = () => {
-    // Softmax probabilities affected by temperature
-    const logits = [2.5, 1.2, 0.5]; // mat, floor, rug
-    const scaledLogits = logits.map(l => l / temperature);
-    const maxLogit = Math.max(...scaledLogits);
-    const exps = scaledLogits.map(l => Math.exp(l - maxLogit));
-    const sumExps = exps.reduce((a, b) => a + b, 0);
-    const probs = exps.map(e => (e / sumExps) * 100);
-
-    return (
-      <div className="flex flex-col gap-6 w-full max-w-lg">
-        <div className="flex flex-col gap-4 items-center">
-            <div className="flex gap-2 font-mono text-lg">
-                <span className="text-slate-500">The</span>
-                <span className="text-slate-500">cat</span>
-                <span className="text-slate-500">sat</span>
-                <span className="text-slate-500">on</span>
-                <span className="text-indigo-400 font-bold underline animate-pulse">the</span>
-                <span className="text-slate-700">???</span>
-            </div>
-            <div className="flex gap-2 flex-wrap justify-center">
-                <div className="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded text-xs text-indigo-300">
-                  mat ({probs[0].toFixed(1)}%)
-                </div>
-                <div className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-xs text-slate-500">
-                  floor ({probs[1].toFixed(1)}%)
-                </div>
-                <div className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-xs text-slate-500">
-                  rug ({probs[2].toFixed(1)}%)
-                </div>
-            </div>
+  const renderCLM = () => (
+    <div className="flex flex-col gap-4 items-center">
+        <div className="flex gap-2 font-mono text-lg">
+            <span className="text-slate-500">The</span>
+            <span className="text-slate-500">cat</span>
+            <span className="text-slate-500">sat</span>
+            <span className="text-slate-500">on</span>
+            <span className="text-indigo-400 font-bold underline animate-pulse">the</span>
+            <span className="text-slate-700">???</span>
         </div>
-
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-            <label htmlFor="temp-slider" className="text-xs text-slate-400 mb-3 block">
-              Temperature: <span className="text-amber-400 font-bold">{temperature.toFixed(2)}</span>
-            </label>
-            <input
-              id="temp-slider"
-              type="range"
-              min="0.1"
-              max="2"
-              step="0.1"
-              value={temperature}
-              onChange={(e) => setTemperature(parseFloat(e.target.value))}
-              className="w-full cursor-pointer accent-amber-400"
-            />
-            <p className="text-[10px] text-slate-500 mt-2 font-mono">
-              Lower temp = sharper distribution | Higher temp = softer, more random
-            </p>
+        <div className="flex gap-2">
+            <div className="px-2 py-1 bg-indigo-500/10 border border-indigo-500/30 rounded text-xs text-indigo-300">mat (85%)</div>
+            <div className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-500">floor (10%)</div>
         </div>
-      </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <div className="w-full min-h-[400px] flex flex-col items-center justify-center p-8 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden group">
-      <style>{animationStyles}</style>
       {mode === 'tokenizer-interactive' && renderTokenizer()}
       {mode === 'lo-ra-viz' && renderLoRA()}
       {mode === 'sft-viz' && renderSFT()}
