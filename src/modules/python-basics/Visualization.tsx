@@ -13,10 +13,6 @@ interface PythonVizProps {
 export default function PythonVisualization({ mode = 'code-highlight' }: PythonVizProps) {
   const [listData, setListData] = useState([1, 2, 3, 4, 5]);
   const [transform, setTransform] = useState('x * 2');
-  const [loopStep, setLoopStep] = useState(0);
-  const [scopeLevel, setScopeLevel] = useState('local');
-  const [selectedCollection, setSelectedCollection] = useState('list');
-
   const output = React.useMemo(() => {
     try {
       const fn = new Function('x', `return ${transform}`);
@@ -80,257 +76,6 @@ export default function PythonVisualization({ mode = 'code-highlight' }: PythonV
     </div>
   );
 
-  const renderVariablesTypes = () => (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700 hover:border-blue-500 transition-colors">
-          <p className="text-xs text-slate-400 mb-2">String</p>
-          <code className="text-yellow-300 text-lg">name = "Alice"</code>
-          <p className="text-slate-400 text-sm mt-2">text data</p>
-        </div>
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700 hover:border-green-500 transition-colors">
-          <p className="text-xs text-slate-400 mb-2">Integer</p>
-          <code className="text-yellow-300 text-lg">age = 30</code>
-          <p className="text-slate-400 text-sm mt-2">whole numbers</p>
-        </div>
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700 hover:border-purple-500 transition-colors">
-          <p className="text-xs text-slate-400 mb-2">Float</p>
-          <code className="text-yellow-300 text-lg">pi = 3.14</code>
-          <p className="text-slate-400 text-sm mt-2">decimal numbers</p>
-        </div>
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700 hover:border-pink-500 transition-colors">
-          <p className="text-xs text-slate-400 mb-2">Boolean</p>
-          <code className="text-yellow-300 text-lg">is_ready = True</code>
-          <p className="text-slate-400 text-sm mt-2">True or False</p>
-        </div>
-      </div>
-      <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-        <p className="text-blue-400 text-sm mb-2 font-mono">type() function:</p>
-        <p className="text-slate-300 font-mono text-sm">type(age)  {'→'} &lt;class 'int'&gt;</p>
-        <p className="text-slate-300 font-mono text-sm">type(pi)   {'→'} &lt;class 'float'&gt;</p>
-      </div>
-    </div>
-  );
-
-  const renderControlFlow = () => (
-    <div className="flex flex-col gap-6 p-6 w-full overflow-auto max-h-96">
-      <div className="space-y-4">
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-          <p className="text-blue-400 mb-3 font-bold">Loop Iteration Visualization</p>
-          <p className="text-slate-400 text-xs mb-3 font-mono">Current iteration: <span className="text-green-400 font-bold">{loopStep % 5}</span></p>
-          <div className="flex gap-2 flex-wrap">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div 
-                key={i}
-                role="status"
-                aria-label={i === loopStep % 5 ? `Current iteration ${i}` : `Iteration ${i}`}
-                className={`w-12 h-12 flex items-center justify-center rounded font-bold transition-all ${
-                  i === loopStep % 5
-                    ? 'bg-green-500 text-white scale-110 ring-2 ring-green-300'
-                    : 'bg-slate-700 text-slate-300'
-                }`}
-              >
-                {i}
-              </div>
-            ))}
-          </div>
-          <p className="text-slate-400 text-sm mt-3 font-mono">for i in range(5):</p>
-        </div>
-        <button
-          onClick={() => setLoopStep(s => s + 1)}
-          className="px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium transition-colors"
-          aria-label={`Step through loop: current iteration ${loopStep % 5}`}
-        >
-          → Step Through Loop
-        </button>
-      </div>
-      <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-        <p className="text-slate-300 font-mono text-sm">
-          {`if x > 5:`} <span className="text-green-400">do_something()</span>
-        </p>
-        <p className="text-slate-300 font-mono text-sm">
-          {`elif x == 5:`} <span className="text-yellow-400">do_middle()</span>
-        </p>
-        <p className="text-slate-300 font-mono text-sm">
-          {`else:`} <span className="text-red-400">do_else()</span>
-        </p>
-      </div>
-    </div>
-  );
-
-  const renderFunctionsScope = () => (
-    <div className="flex flex-col gap-6 p-6 w-full overflow-auto max-h-96">
-      <div className="space-y-4">
-        <fieldset>
-          <legend className="text-slate-300 text-sm font-bold mb-3">Select Scope Level:</legend>
-          <div className="space-y-2">
-            <button
-              onClick={() => setScopeLevel('local')}
-              className={`w-full px-4 py-3 rounded text-sm transition-all text-left ${
-                scopeLevel === 'local'
-                  ? 'bg-blue-600 text-white border border-blue-400'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-              }`}
-              aria-pressed={scopeLevel === 'local'}
-            >
-              <span className="font-semibold">Local Scope</span> - Inside current function
-            </button>
-            <button
-              onClick={() => setScopeLevel('global')}
-              className={`w-full px-4 py-3 rounded text-sm transition-all text-left ${
-                scopeLevel === 'global'
-                  ? 'bg-pink-600 text-white border border-pink-400'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-              }`}
-              aria-pressed={scopeLevel === 'global'}
-            >
-              <span className="font-semibold">Global Scope</span> - At module level
-            </button>
-            <button
-              onClick={() => setScopeLevel('nonlocal')}
-              className={`w-full px-4 py-3 rounded text-sm transition-all text-left ${
-                scopeLevel === 'nonlocal'
-                  ? 'bg-purple-600 text-white border border-purple-400'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-              }`}
-              aria-pressed={scopeLevel === 'nonlocal'}
-            >
-              <span className="font-semibold">Nonlocal Scope</span> - In enclosing function
-            </button>
-          </div>
-        </fieldset>
-      </div>
-      <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-        <p className="text-slate-300 font-mono text-sm mb-3">LEGB Resolution Order:</p>
-        <ol className="space-y-1 text-sm">
-          <li className="text-blue-400">1. <strong>Local</strong> - Inside current function</li>
-          <li className="text-green-400">2. <strong>Enclosing</strong> - In enclosing function</li>
-          <li className="text-yellow-400">3. <strong>Global</strong> - In module/script</li>
-          <li className="text-purple-400">4. <strong>Built-in</strong> - Python built-ins</li>
-        </ol>
-      </div>
-    </div>
-  );
-
-  const renderCollections = () => (
-    <div className="flex flex-col gap-6 p-6 w-full overflow-auto max-h-96">
-      <fieldset>
-        <legend className="text-slate-300 text-sm font-bold mb-3">Select Collection Type:</legend>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setSelectedCollection('list')}
-            className={`p-4 rounded text-sm transition-all font-semibold ${
-              selectedCollection === 'list'
-                ? 'bg-blue-600 text-white border-2 border-blue-300'
-                : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-blue-500'
-            }`}
-            aria-pressed={selectedCollection === 'list'}
-            aria-describedby="list-desc"
-          >
-            List []
-          </button>
-          <button
-            onClick={() => setSelectedCollection('dict')}
-            className={`p-4 rounded text-sm transition-all font-semibold ${
-              selectedCollection === 'dict'
-                ? 'bg-green-600 text-white border-2 border-green-300'
-                : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-green-500'
-            }`}
-            aria-pressed={selectedCollection === 'dict'}
-            aria-describedby="dict-desc"
-          >
-            Dict {}
-          </button>
-          <button
-            onClick={() => setSelectedCollection('tuple')}
-            className={`p-4 rounded text-sm transition-all font-semibold ${
-              selectedCollection === 'tuple'
-                ? 'bg-purple-600 text-white border-2 border-purple-300'
-                : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-purple-500'
-            }`}
-            aria-pressed={selectedCollection === 'tuple'}
-            aria-describedby="tuple-desc"
-          >
-            Tuple ()
-          </button>
-          <button
-            onClick={() => setSelectedCollection('set')}
-            className={`p-4 rounded text-sm transition-all font-semibold ${
-              selectedCollection === 'set'
-                ? 'bg-pink-600 text-white border-2 border-pink-300'
-                : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-pink-500'
-            }`}
-            aria-pressed={selectedCollection === 'set'}
-            aria-describedby="set-desc"
-          >
-            Set {}
-          </button>
-        </div>
-      </fieldset>
-      <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-        {selectedCollection === 'list' && (
-          <>
-            <p className="text-blue-400 font-mono mb-2">Ordered, Mutable</p>
-            <code className="text-slate-300 text-sm">names = ["Alice", "Bob", "Charlie"]</code>
-            <p className="text-slate-400 text-xs mt-2">names[0] = "Alice"  (Indexable)</p>
-          </>
-        )}
-        {selectedCollection === 'dict' && (
-          <>
-            <p className="text-green-400 font-mono mb-2">Key-Value Pairs, Mutable</p>
-            <code className="text-slate-300 text-sm">ages = {"{"}"Alice": 30, "Bob": 25{"}"}</code>
-            <p className="text-slate-400 text-xs mt-2">ages["Alice"] = 30  (Fast lookup)</p>
-          </>
-        )}
-        {selectedCollection === 'tuple' && (
-          <>
-            <p className="text-purple-400 font-mono mb-2">Ordered, Immutable</p>
-            <code className="text-slate-300 text-sm">point = (10, 20)</code>
-            <p className="text-slate-400 text-xs mt-2">point[0] = 10  (Hashable, can be dict key)</p>
-          </>
-        )}
-        {selectedCollection === 'set' && (
-          <>
-            <p className="text-pink-400 font-mono mb-2">Unique Items, Unordered</p>
-            <code className="text-slate-300 text-sm">unique = {"{"}1, 2, 3, 2{"}"}</code>
-            <p className="text-slate-400 text-xs mt-2">unique = {"{"}1, 2, 3{"}"}  (Duplicates removed)</p>
-          </>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderFileStrings = () => (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="space-y-4">
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-          <p className="text-blue-400 mb-2 font-mono text-sm">F-String Formatting:</p>
-          <code className="text-slate-300 text-sm block">
-            name = "Alice"<br />
-            age = 30<br />
-            print(f"Hello, {"{name}"}, age {"{age}"}")
-          </code>
-          <p className="text-green-400 text-sm mt-2">{'→'} Hello, Alice, age 30</p>
-        </div>
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-          <p className="text-purple-400 mb-2 font-mono text-sm">File Operations:</p>
-          <code className="text-slate-300 text-sm block">
-            with open("data.txt", "r") as f:<br />
-            &nbsp;&nbsp;content = f.read()
-          </code>
-        </div>
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-          <p className="text-yellow-400 mb-2 font-mono text-sm">String Methods:</p>
-          <code className="text-slate-300 text-sm block">
-            text = "hello world"<br />
-            text.upper() {'→'} "HELLO WORLD"<br />
-            text.split() {'→'} ["hello", "world"]
-          </code>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderClassDiagram = () => (
     <div className="flex justify-center items-center h-[400px]">
       <svg width="450" height="350" viewBox="0 0 450 350">
@@ -367,23 +112,16 @@ export default function PythonVisualization({ mode = 'code-highlight' }: PythonV
 
   return (
     <div className="w-full h-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex flex-col items-center justify-center p-8">
-      {mode === 'variables-types' && renderVariablesTypes()}
-      {mode === 'control-flow' && renderControlFlow()}
-      {mode === 'functions-scope' && renderFunctionsScope()}
-      {mode === 'collections' && renderCollections()}
       {mode === 'interactive-comprehension' && renderComprehension()}
-      {mode === 'file-strings' && renderFileStrings()}
       {mode === 'class-diagram' && renderClassDiagram()}
-      {mode !== 'variables-types' && mode !== 'control-flow' && mode !== 'functions-scope' && 
-       mode !== 'collections' && mode !== 'interactive-comprehension' && mode !== 'file-strings' && 
-       mode !== 'class-diagram' && (
+      {mode !== 'interactive-comprehension' && mode !== 'class-diagram' && (
         <div className="text-center">
             <div className="w-24 h-24 mb-6 mx-auto rounded-3xl bg-blue-500/20 flex items-center justify-center border border-blue-500 animate-pulse">
                 <span className="text-4xl text-blue-400">🐍</span>
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">Python for AI</h3>
             <p className="text-slate-400 max-w-sm">
-                Interactive syntax lab. Select a step to begin exploring foundational Python features.
+                Interactive syntax lab. Select a step to begin exploring advanced Python features.
             </p>
         </div>
       )}
