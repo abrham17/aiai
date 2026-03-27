@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useProgress } from '@/hooks/useProgress';
 import { useModuleData } from '@/hooks/useModuleData';
+import PyodidePlayground from '@/components/PyodidePlayground';
 import type { VisualizationProps } from '@/core/types';
 
 const GRAPH_PRESETS = [
@@ -214,8 +215,10 @@ export default function PlaygroundPage() {
 
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
         <div style={{ flex: 1, display: 'flex', alignItems: 'stretch', position: 'relative' }}>
-          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-            {moduleData.Visualization ? (
+          <div style={{ width: '100%', height: '100%', position: 'relative', padding: '1rem' }}>
+            {moduleId === 'python-basics' ? (
+              <PyodidePlayground defaultCode={String(paramValues.code_editor || '')} />
+            ) : moduleData.Visualization ? (
               <moduleData.Visualization {...vizProps} />
             ) : (
               <div

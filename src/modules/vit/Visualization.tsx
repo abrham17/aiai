@@ -16,9 +16,24 @@ interface ViTVizProps {
 const VIZ_SIZE = 500;
 const GRID_SIZE = 8; // 8x8 patches
 const PATCH_SIZE = VIZ_SIZE / GRID_SIZE;
+const MID = VIZ_SIZE / 2;
 
 export default function ViTVisualization({ mode = 'patching-viz' }: ViTVizProps) {
   const [selectedPatch, setSelectedPatch] = useState<number | null>(null);
+  
+  // Add global styles for animations
+  const animationStyles = `
+    @keyframes patch-explode {
+      0%, 30% { transform: translateX(0) translateY(0) scale(1); }
+      70%, 100% { transform: translateX(var(--tx)) translateY(var(--ty)) scale(0.3); }
+    }
+    .patch-animate { animation: patch-explode 2s ease-in-out infinite; will-change: transform; }
+    @keyframes pulse-ring {
+      0% { r: 15px; opacity: 1; }
+      100% { r: 30px; opacity: 0; }
+    }
+    .pulse-animate { animation: pulse-ring 1s ease-out infinite; will-change: r; }
+  `;
   
   // ── Mode: Patch Explode ──
   const renderPatchExplode = () => {
@@ -137,6 +152,7 @@ export default function ViTVisualization({ mode = 'patching-viz' }: ViTVizProps)
 
   return (
     <div className="w-full flex flex-col items-center justify-center p-8 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden group">
+      <style>{animationStyles}</style>
       
       {/* Background Grid Atmosphere */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0)_2px,#0f172a_2px),linear-gradient(90deg,rgba(15,23,42,0)_2px,#0f172a_2px)] bg-[size:40px_40px] opacity-20 pointer-events-none" />
@@ -145,6 +161,12 @@ export default function ViTVisualization({ mode = 'patching-viz' }: ViTVizProps)
         viewBox={`0 0 ${VIZ_SIZE} ${VIZ_SIZE}`}
         className="w-full h-auto max-w-lg drop-shadow-[0_0_20px_rgba(99,102,241,0.15)]"
       >
+        <defs>
+          <marker id="arrow-head" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="var(--slate-600)" />
+          </marker>
+        </defs>
+        
         {/* The Image Plane (dashed border) */}
         <rect x="0" y="0" width={VIZ_SIZE} height={VIZ_SIZE} fill="none" stroke="var(--slate-800)" strokeWidth="2" strokeDasharray="10,10" />
 
@@ -161,11 +183,11 @@ export default function ViTVisualization({ mode = 'patching-viz' }: ViTVizProps)
         {mode === 'cls-token-viz' && (
             <g>
                 <circle cx="50" cy="50" r="20" fill="var(--amber-400)" />
-                <text x="50" y="85" textAnchor="middle" fill="var(--amber-400)" fontSize="10" fontWeight="bold">[CLS]</text>
+                <text x="50" y="85" textAnchor="middle" fill="var(--amber-400)" fontSize="10" fontWeight="bold">{'[CLS]'}</text>
                 {Array.from({length: 4}).map((_, i) => (
-                    <path key={i} d={`M 50 50 L ${150 + i*50} ${150}`} stroke="var(--amber-400)" strokeWidth="2" opacity="0.3" markerEnd="url(#arrow-head)" />
+                    <path key={i} d={`M 50 50 L ${150 + i*50} 150`} stroke="var(--amber-400)" strokeWidth="2" opacity="0.3" markerEnd="url(#arrow-head)" />
                 ))}
-                <text x="VIZ_SIZE/2" y="VIZ_SIZE - 20" textAnchor="middle" fill="var(--slate-500)" fontSize="12 italic">Collecting global context...</text>
+                <text x={MID} y={VIZ_SIZE - 20} textAnchor="middle" fill="var(--slate-500)" fontSize="12" fontStyle="italic">Collecting global context...</text>
             </g>
         )}
         {mode === 'heatmaps-viz' && renderAttentionMap()}
@@ -175,13 +197,13 @@ export default function ViTVisualization({ mode = 'patching-viz' }: ViTVizProps)
                 {Array.from({length: 16}).map((_, i) => (
                     <rect key={i} x={100 + (i%4)*75} y={100 + Math.floor(i/4)*75} width="60" height="60" fill="none" stroke="var(--amber-400)" strokeDasharray="4,2" />
                 ))}
-                <text x="VIZ_SIZE/2" y="380" textAnchor="middle" fill="var(--amber-400)" fontSize="12">LEARNED SPATIAL GRID (2D PE)</text>
+                <text x={MID} y={380} textAnchor="middle" fill="var(--amber-400)" fontSize="12">LEARNED SPATIAL GRID (2D PE)</text>
              </g>
         )}
         {mode === 'rf-viz' && (
             <g>
-                <circle cx={VIZ_SIZE/2} cy={VIZ_SIZE/2} r="150" fill="var(--accent)" opacity="0.1" stroke="var(--accent)" strokeDasharray="10,5" />
-                <text x="VIZ_SIZE/2" y={VIZ_SIZE/2} textAnchor="middle" fill="white" fontSize="14">GLOBAL RECEPTIVE FIELD</text>
+                <circle cx={MID} cy={MID} r="150" fill="var(--accent)" opacity="0.1" stroke="var(--accent)" strokeDasharray="10,5" />
+                <text x={MID} y={MID} textAnchor="middle" fill="white" fontSize="14">GLOBAL RECEPTIVE FIELD</text>
                 <path d="M 50 50 L 450 450 M 450 50 L 50 450" stroke="var(--accent)" opacity="0.2" />
             </g>
         )}
@@ -198,7 +220,7 @@ export default function ViTVisualization({ mode = 'patching-viz' }: ViTVizProps)
                 {['ViT', 'DeiT', 'Swin', 'MAE'].map((v, i) => (
                     <rect key={v} x={50 + i*110} y="150" width="90" height="100" fill="var(--slate-800)" stroke="var(--accent)" rx="4" opacity={1 - i*0.2} />
                 ))}
-                <text x="VIZ_SIZE/2" y="300" textAnchor="middle" fill="var(--slate-500)" fontSize="12">Evolution of Vision Models</text>
+                <text x={MID} y="300" textAnchor="middle" fill="var(--slate-500)" fontSize="12">Evolution of Vision Models</text>
             </g>
         )}
         {mode === 'cls-depth-viz' && (
