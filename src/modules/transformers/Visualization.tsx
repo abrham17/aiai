@@ -20,25 +20,40 @@ const VIZ_HEIGHT = 450;
 // ── Components ──
 
 /**
- * Animated Particle for Flow Visualizations
+ * Animated Particle for Flow Visualizations - Using simple opacity animation
  */
-const Particle = ({ delay, duration, path }: { delay: number; duration: number; path: string }) => (
-  <circle r="2" fill="var(--accent)" opacity="0.8">
-    <animateMotion
-      path={path}
-      dur={`${duration}s`}
-      begin={`${delay}s`}
-      repeatCount="indefinite"
-      calcMode="linear"
-    />
-    <filter id="p-glow">
-      <feGaussianBlur stdDeviation="1.5" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-  </circle>
+const Particle = memo(({ delay, duration, path, index }: { delay: number; duration: number; path: string; index: number }) => {
+  // Extract start point from path
+  const match = path.match(/M\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/);
+  const startX = match ? parseFloat(match[1]) : 0;
+  const startY = match ? parseFloat(match[2]) : 0;
+
+  return (
+    <g style={{ '--delay': `${delay}s` } as any}>
+      <style>{`
+        @keyframes particle-pulse-${index} {
+          0% { opacity: 0; }
+          10% { opacity: 0.8; }
+          90% { opacity: 0.8; }
+          100% { opacity: 0; }
+        }
+        .particle-${index} {
+          animation: particle-pulse-${index} ${duration}s linear ${delay}s infinite;
+          transform: translateZ(0);
+          will-change: opacity;
+        }
+      `}</style>
+      <circle
+        r="3"
+        cx={startX}
+        cy={startY}
+        fill="currentColor"
+        className={`text-blue-400 particle-${index}`}
+      />
+    </g>
+  );
+}, (prevProps, nextProps) => 
+  prevProps.path === nextProps.path && prevProps.delay === nextProps.delay && prevProps.duration === nextProps.duration
 );
 
 /**
@@ -87,12 +102,12 @@ const BlockFlow = () => {
       <path d={pathSkip2} fill="none" stroke="var(--amber-400)" strokeWidth="2" strokeDasharray="5,5" opacity="0.4" />
 
       {/* Flow Particles */}
-      {[0, 0.5, 1, 1.5].map(d => <Particle key={`p1-${d}`} delay={d} duration={3} path={pathInput} />)}
-      {[0, 1].map(d => <Particle key={`pa-${d}`} delay={d} duration={3} path={pathAttn} />)}
-      {[0.5, 1.5].map(d => <Particle key={`ps1-${d}`} delay={d} duration={3} path={pathSkip1} />)}
-      {[0, 1].map(d => <Particle key={`pf-${d}`} delay={d} duration={3} path={pathFFN} />)}
-      {[0.5, 1.5].map(d => <Particle key={`ps2-${d}`} delay={d} duration={3} path={pathSkip2} />)}
-      {[0, 0.5, 1, 1.5].map(d => <Particle key={`pout-${d}`} delay={d} duration={3} path={pathOutput} />)}
+      {[0, 0.5, 1, 1.5].map((d, i) => <Particle key={`p1-${d}`} index={i} delay={d} duration={3} path={pathInput} />)}
+      {[0, 1].map((d, i) => <Particle key={`pa-${d}`} index={10 + i} delay={d} duration={3} path={pathAttn} />)}
+      {[0.5, 1.5].map((d, i) => <Particle key={`ps1-${d}`} index={20 + i} delay={d} duration={3} path={pathSkip1} />)}
+      {[0, 1].map((d, i) => <Particle key={`pf-${d}`} index={30 + i} delay={d} duration={3} path={pathFFN} />)}
+      {[0.5, 1.5].map((d, i) => <Particle key={`ps2-${d}`} index={40 + i} delay={d} duration={3} path={pathSkip2} />)}
+      {[0, 0.5, 1, 1.5].map((d, i) => <Particle key={`pout-${d}`} index={50 + i} delay={d} duration={3} path={pathOutput} />)}
     </g>
   );
 };
@@ -123,9 +138,13 @@ const PositionalWaves = ({ intensity = 1 }: { intensity?: number }) => {
       <line x1={padding} y1={VIZ_HEIGHT / 2} x2={padding + w} y2={VIZ_HEIGHT / 2} stroke="var(--slate-800)" strokeWidth="1" />
       
       {/* Wave Layers */}
-      <path d={generatePath(0.05, 0)} fill="none" stroke="var(--accent)" strokeWidth="3" opacity="0.8">
-          <animate attributeName="stroke-dashoffset" from="0" to="100" dur="5s" repeatCount="indefinite" />
-      </path>
+      <style>{`
+        @keyframes wave-dash {
+          to { stroke-dashoffset: 100; }
+        }
+        .wave-animate { animation: wave-dash 5s linear infinite; }
+      `}</style>
+      <path d={generatePath(0.05, 0)} fill="none" stroke="var(--accent)" strokeWidth="3" opacity="0.8" strokeDasharray="10,10" className="wave-animate" style={{ willChange: 'stroke-dashoffset' }} />
       <path d={generatePath(0.1, Math.PI / 2)} fill="none" stroke="#a78bfa" strokeWidth="2" opacity="0.6" />
       <path d={generatePath(0.25, Math.PI)} fill="none" stroke="#fbbf24" strokeWidth="1" opacity="0.4" />
       
